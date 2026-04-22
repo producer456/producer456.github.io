@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Week 3 - Cell Biology Practice Test</title>
+<style>
+  :root {
+    --bg: #0f0f0f;
+    --card: #1a1a2e;
+    --accent: #6c63ff;
+    --accent2: #00d2ff;
+    --correct: #00c853;
+    --wrong: #ff1744;
+    --text: #e0e0e0;
+    --text2: #999;
+    --border: #2a2a4a;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.6;
+    min-height: 100vh;
+  }
+  .header {
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+    padding: 2rem;
+    text-align: center;
+    border-bottom: 2px solid var(--accent);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  .header h1 {
+    font-size: 1.8rem;
+    background: linear-gradient(90deg, var(--accent), var(--accent2));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    margin-bottom: 0.5rem;
+  }
+  .header .stats {
+    display: flex;
+    justify-content: center;
+    gap: 2rem;
+    font-size: 0.95rem;
+    color: var(--text2);
+  }
+  .header .stats span { color: var(--accent2); font-weight: 700; }
+  .progress-bar {
+    width: 100%;
+    height: 4px;
+    background: var(--border);
+    position: absolute;
+    bottom: 0;
+    left: 0;
+  }
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent), var(--accent2));
+    transition: width 0.4s ease;
+    width: 0%;
+  }
+  .container {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 1.5rem;
+  }
+  .question-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin-bottom: 1rem;
+    transition: border-color 0.3s;
+  }
+  .question-card.answered-correct { border-color: var(--correct); }
+  .question-card.answered-wrong { border-color: var(--wrong); }
+  .q-number {
+    font-size: 0.75rem;
+    color: var(--accent);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 0.5rem;
+  }
+  .q-text {
+    font-size: 1.05rem;
+    font-weight: 600;
+    margin-bottom: 1rem;
+    color: #fff;
+  }
+  .options { display: flex; flex-direction: column; gap: 0.5rem; }
+  .option {
+    display: flex;
+    align-items: center;
+    padding: 0.75rem 1rem;
+    background: rgba(255,255,255,0.03);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-size: 0.95rem;
+  }
+  .option:hover:not(.disabled) {
+    background: rgba(108,99,255,0.1);
+    border-color: var(--accent);
+  }
+  .option.selected { background: rgba(108,99,255,0.15); border-color: var(--accent); }
+  .option.correct { background: rgba(0,200,83,0.15); border-color: var(--correct); color: var(--correct); }
+  .option.wrong { background: rgba(255,23,68,0.15); border-color: var(--wrong); color: var(--wrong); }
+  .option.disabled { cursor: default; opacity: 0.7; }
+  .option.disabled.correct { opacity: 1; }
+  .option .letter {
+    width: 28px; height: 28px;
+    border-radius: 50%;
+    border: 2px solid var(--border);
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 700; font-size: 0.8rem;
+    margin-right: 0.75rem;
+    flex-shrink: 0;
+  }
+  .option.correct .letter { border-color: var(--correct); color: var(--correct); }
+  .option.wrong .letter { border-color: var(--wrong); color: var(--wrong); }
+  .explanation {
+    margin-top: 0.75rem;
+    padding: 0.75rem;
+    background: rgba(0,210,255,0.05);
+    border-left: 3px solid var(--accent2);
+    border-radius: 4px;
+    font-size: 0.85rem;
+    color: var(--text2);
+    display: none;
+  }
+  .explanation.show { display: block; }
+  .results-panel {
+    background: var(--card);
+    border: 2px solid var(--accent);
+    border-radius: 16px;
+    padding: 2rem;
+    text-align: center;
+    margin: 2rem 0;
+    display: none;
+  }
+  .results-panel.show { display: block; }
+  .results-panel h2 { font-size: 1.5rem; margin-bottom: 1rem; color: #fff; }
+  .score-circle {
+    width: 140px; height: 140px;
+    border-radius: 50%;
+    border: 6px solid var(--accent);
+    display: flex; align-items: center; justify-content: center;
+    margin: 1rem auto;
+    font-size: 2.5rem; font-weight: 800;
+  }
+  .score-circle.great { border-color: var(--correct); color: var(--correct); }
+  .score-circle.ok { border-color: #ffab00; color: #ffab00; }
+  .score-circle.low { border-color: var(--wrong); color: var(--wrong); }
+  .btn {
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    color: #fff;
+    border: none;
+    padding: 0.85rem 2rem;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    margin-top: 1rem;
+    transition: transform 0.2s, box-shadow 0.2s;
+  }
+  .btn:hover { transform: translateY(-2px); box-shadow: 0 4px 20px rgba(108,99,255,0.4); }
+  .controls {
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+    margin: 1.5rem 0;
+    flex-wrap: wrap;
+  }
+  .filter-btn {
+    background: var(--card);
+    color: var(--text2);
+    border: 1px solid var(--border);
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    cursor: pointer;
+    font-size: 0.85rem;
+    transition: all 0.2s;
+  }
+  .filter-btn:hover, .filter-btn.active {
+    border-color: var(--accent);
+    color: var(--accent);
+    background: rgba(108,99,255,0.1);
+  }
+  @media (max-width: 600px) {
+    .header h1 { font-size: 1.3rem; }
+    .header .stats { gap: 1rem; font-size: 0.8rem; }
+    .container { padding: 1rem; }
+    .question-card { padding: 1rem; }
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>Week 3: Cell Biology & Transport</h1>
+  <div class="stats">
+    <div>Answered: <span id="answeredCount">0</span>/100</div>
+    <div>Correct: <span id="correctCount">0</span></div>
+    <div>Score: <span id="scorePercent">0%</span></div>
+  </div>
+  <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+</div>
+
+<div class="container">
+  <div class="controls">
+    <button class="filter-btn active" onclick="filterQuestions('all', this)">All Questions</button>
+    <button class="filter-btn" onclick="filterQuestions('unanswered', this)">Unanswered</button>
+    <button class="filter-btn" onclick="filterQuestions('wrong', this)">Incorrect</button>
+    <button class="btn" onclick="submitTest()">Submit Test</button>
+    <button class="btn" style="background:linear-gradient(135deg,#ff1744,#ff6d00)" onclick="resetTest()">Reset</button>
+  </div>
+
+  <div id="questionsContainer"></div>
+
+  <div class="results-panel" id="resultsPanel">
+    <h2>Test Results</h2>
+    <div class="score-circle" id="scoreCircle">0%</div>
+    <p id="resultsText"></p>
+    <button class="btn" onclick="filterQuestions('wrong', this)">Review Incorrect</button>
+    <button class="btn" onclick="resetTest()">Retake Test</button>
+  </div>
+</div>
+
+<script>
+const questions = [
+  // HOMEOSTASIS (1-8)
+  {q:"What is the primary role of homeostasis in the body?",o:["To increase body temperature","To maintain a stable internal environment","To speed up metabolism","To produce new cells"],a:1,e:"Homeostasis is the process of maintaining a stable internal environment despite external changes."},
+  {q:"Which type of feedback mechanism is most commonly used by the body to maintain homeostasis?",o:["Positive feedback","Negative feedback","Neutral feedback","Reverse feedback"],a:1,e:"Negative feedback loops are the most common mechanism for maintaining homeostasis, working to reverse changes and return to a set point."},
+  {q:"What can result from a homeostatic imbalance?",o:["Improved athletic performance","Disease","Faster cell division","Enhanced immunity"],a:1,e:"Homeostatic imbalances can lead to disease when the body can no longer maintain stable conditions."},
+  {q:"Homeostasis is controlled by which mechanisms?",o:["Feedback mechanisms","Osmotic mechanisms","Gravitational mechanisms","Electromagnetic mechanisms"],a:0,e:"Homeostasis is controlled by feedback mechanisms, primarily negative feedback loops."},
+  {q:"Which of the following is NOT a role of homeostasis?",o:["Maintaining good health","Controlling feedback mechanisms","Causing disease","Responding to homeostatic imbalances"],a:2,e:"Homeostasis works to prevent disease, not cause it. Disease results from homeostatic failure."},
+  {q:"In a negative feedback loop, the response to a stimulus:",o:["Amplifies the original change","Has no effect","Reverses the original change","Creates a new stimulus"],a:2,e:"Negative feedback reverses the direction of change to restore the set point."},
+  {q:"Maintaining optimal water levels inside cells relative to the extracellular environment is an example of:",o:["Active transport","Homeostasis","Mitosis","Exocytosis"],a:1,e:"Water balance is a key example of homeostatic regulation in cells."},
+  {q:"Which of the following best describes the relationship between homeostasis and disease?",o:["Disease causes homeostasis","Homeostasis prevents all disease","Homeostatic imbalance can lead to disease","Disease improves homeostasis"],a:2,e:"When homeostatic mechanisms fail or are overwhelmed, disease can result."},
+
+  // LEVELS OF STRUCTURAL ORGANIZATION (9-16)
+  {q:"What is the correct order of structural organization from simplest to most complex?",o:["Cell, tissue, organ, chemical, organ system, organism","Chemical, cellular, tissue, organ, organ system, organism","Tissue, cell, organ, organism, organ system, chemical","Organ, tissue, cell, chemical, organism, organ system"],a:1,e:"The hierarchy goes from chemical (atoms/molecules) to cellular to tissue to organ to organ system to organism."},
+  {q:"At the chemical level of organization, atoms bond to form:",o:["Cells","Tissues","Molecules","Organs"],a:2,e:"At the chemical level, atoms (C, H, O, etc.) bond to form molecules like H2O and DNA."},
+  {q:"Which level of organization is described as 'basic units of life'?",o:["Chemical level","Cellular level","Tissue level","Organ level"],a:1,e:"Cells are the basic units of life at the cellular level of organization."},
+  {q:"Groups of similar cells performing a shared function represent which level?",o:["Cellular level","Tissue level","Organ level","Organ system level"],a:1,e:"The tissue level consists of groups of similar cells that work together to perform a shared function."},
+  {q:"An organ is composed of:",o:["One type of tissue","Two or more tissue types forming functional structures","Only muscle tissue","Individual cells"],a:1,e:"Organs are made up of two or more different tissue types that combine to form functional structures."},
+  {q:"The organ system level is characterized by:",o:["A single organ functioning alone","Multiple organs working together","Individual cells","Chemical reactions"],a:1,e:"Organ systems consist of multiple organs working together to perform complex functions."},
+  {q:"The organism level represents:",o:["A single organ","A group of tissues","All systems working together to maintain life","A single cell type"],a:2,e:"At the organism level, all organ systems work together harmoniously to maintain life."},
+  {q:"Which is an example of the organ system level?",o:["A single kidney","The urinary tract system","A muscle cell","Blood plasma"],a:1,e:"The urinary tract system (kidneys, ureters, bladder, urethra) is an example of an organ system."},
+
+  // CELL THEORY (17-24)
+  {q:"Which of the following is NOT a principle of cell theory?",o:["All organisms are composed of one or more cells","The cell is the basic unit of life","All cells contain a nucleus","New cells arise from existing cells"],a:2,e:"Cell theory states: (1) all organisms are composed of cells, (2) the cell is the basic unit of life, (3) new cells arise from existing cells. Not all cells have a nucleus (e.g., red blood cells)."},
+  {q:"Who were the two scientists credited with developing cell theory?",o:["Watson and Crick","Schleiden and Schwann","Darwin and Wallace","Pasteur and Koch"],a:1,e:"Matthias Schleiden (botanist) and Theodor Schwann (physiologist) are credited with developing cell theory."},
+  {q:"Matthias Schleiden was a:",o:["Physiologist","Chemist","Botanist","Physicist"],a:2,e:"Schleiden was a botanist who studied plant cells."},
+  {q:"Theodor Schwann was a:",o:["Botanist","Physiologist","Chemist","Geneticist"],a:1,e:"Schwann was a physiologist who extended cell theory to animal cells."},
+  {q:"According to cell theory, new cells arise from:",o:["Spontaneous generation","Non-living matter","Existing cells","Chemical reactions alone"],a:2,e:"The third principle of cell theory states that new cells arise from pre-existing cells."},
+  {q:"Stem cells are characterized by their ability to:",o:["Only produce more stem cells","Differentiate into specific types of cells","Remain permanently undifferentiated","Function as mature cells immediately"],a:1,e:"Stem cells can differentiate into many specific types of cells."},
+  {q:"How do progenitor cells differ from stem cells?",o:["They are completely undifferentiated","They are partially differentiated","They cannot divide","They are only found in plants"],a:1,e:"Progenitor cells are partially differentiated, meaning they are more committed to a cell lineage than stem cells."},
+  {q:"Which of the following cell types can originate from stem cells?",o:["Only blood cells","Only nerve cells","Many different types of cells","Only muscle cells"],a:2,e:"Stem cells can give rise to many different types of cells including blood cells, nerve cells, muscle cells, and more."},
+
+  // CELL STRUCTURE - PLASMA MEMBRANE (25-34)
+  {q:"The plasma membrane is primarily made of:",o:["Carbohydrates and nucleic acids","Lipid bilayer and membrane proteins","Only cholesterol","Cellulose fibers"],a:1,e:"The plasma membrane consists of a lipid bilayer (phospholipids and cholesterol) and membrane proteins."},
+  {q:"Which component of the phospholipid is hydrophilic?",o:["The tail","The fatty acid chains","The head","The entire molecule"],a:2,e:"The phospholipid head is hydrophilic (water-loving) and faces the aqueous environment."},
+  {q:"Which component of the phospholipid is hydrophobic?",o:["The head","The tail","Both head and tail","Neither head nor tail"],a:1,e:"The hydrophobic (water-fearing) tails face inward, away from water."},
+  {q:"What is the primary function of the plasma membrane?",o:["Energy production","Protein synthesis","Separating inner contents from the exterior environment","DNA replication"],a:2,e:"The plasma membrane separates the cell's interior from the external environment, acting as a protective barrier."},
+  {q:"The plasma membrane regulates which of the following?",o:["Only water movement","Only ion movement","What materials pass in or out of the cell","Only protein movement"],a:2,e:"The membrane regulates the passage of vesicles, ions, hormones, proteins, and other materials."},
+  {q:"The fluid mosaic model describes:",o:["How DNA is structured","The structure of the cell membrane as a mosaic of proteins and lipids with fluid properties","The structure of mitochondria","How ribosomes function"],a:1,e:"The fluid mosaic model describes membranes as having fluid properties with a mosaic of proteins embedded in the lipid bilayer."},
+  {q:"In the fluid mosaic model, membranes are composed of:",o:["Only lipids","Only proteins","Lipids and transmembrane proteins","Only carbohydrates"],a:2,e:"Membranes contain both lipids and transmembrane proteins in a fluid arrangement."},
+  {q:"Cholesterol in the plasma membrane serves to:",o:["Store genetic information","Help maintain membrane structure","Produce ATP","Synthesize proteins"],a:1,e:"Cholesterol is part of the lipid bilayer and helps maintain membrane fluidity and structure."},
+  {q:"The hydrophilic heads of phospholipids face:",o:["Inward toward each other","Toward the water on both sides of the membrane","Away from all water","Only toward the cytoplasm"],a:1,e:"Hydrophilic heads face outward toward the aqueous environments on both sides of the membrane."},
+  {q:"Which of the following is NOT a function of the plasma membrane?",o:["Protective barrier","Regulates material passage","Separates cell contents from exterior","Produces energy for the cell"],a:3,e:"Energy production is the function of mitochondria, not the plasma membrane."},
+
+  // CYTOSKELETON (35-40)
+  {q:"The cytoskeleton is made of:",o:["Lipids and carbohydrates","Different protein fibers and chains","DNA and RNA","Only water"],a:1,e:"The cytoskeleton is composed of different protein fibers/chains including microtubules, microfilaments, and intermediate filaments."},
+  {q:"What are the primary functions of the cytoskeleton?",o:["Energy production and protein synthesis","Structural support and cell shape","DNA replication and transcription","Digestion of food particles"],a:1,e:"The cytoskeleton provides structural support and determines the shape of the cell."},
+  {q:"Microtubules are part of the cytoskeleton and help form:",o:["The cell membrane","The mitotic spindle and maintain cell shape","ATP molecules","Lipid bilayers"],a:1,e:"Microtubules form the mitotic spindle during cell division and help maintain cell shape."},
+  {q:"Which cytoskeletal structure is made of fibrous proteins that form the cellular cortex?",o:["Microtubules","Intermediate filaments","Microfilaments","Centrioles"],a:2,e:"Microfilaments are fibrous proteins that form the cellular cortex."},
+  {q:"Intermediate filaments function to:",o:["Produce energy","Hold organelles in place","Synthesize proteins","Digest waste"],a:1,e:"Intermediate filaments are fibrous proteins that hold organelles in place."},
+  {q:"Cilia and flagella are extensions of which cellular structure?",o:["Plasma membrane only","Cytoskeleton (microtubules)","Nucleus","Golgi apparatus"],a:1,e:"Cilia and flagella are extensions composed of microtubules, which are part of the cytoskeleton."},
+
+  // CYTOPLASM (41-44)
+  {q:"Cytoplasm/cytosol is primarily composed of:",o:["Lipids","Mostly water","DNA","Carbohydrates only"],a:1,e:"Cytoplasm is made mostly of water, plus dissolved proteins, carbohydrates, and ion solutes."},
+  {q:"What is the function of cytoplasm?",o:["Store genetic information","Provide the fluid medium for metabolic reactions and surround organelles","Produce energy","Break down waste"],a:1,e:"Cytoplasm provides the fluid medium necessary for metabolic reactions and is the fluid that surrounds organelles."},
+  {q:"In animal cells, the cytoplasm:",o:["Takes up very little space","Takes up more space and is packed full of organelles","Is absent","Contains only water"],a:1,e:"In animal cells, cytoplasm takes up more space and is packed full of organelles and cytoskeleton."},
+  {q:"In plant cells, most of the cell space is occupied by:",o:["Cytoplasm","The central vacuole","Mitochondria","Ribosomes"],a:1,e:"In plant cells, most space is occupied by the central vacuole, with cytoplasm taking up very little space."},
+
+  // NUCLEUS (45-49)
+  {q:"The nucleus contains:",o:["Digestive enzymes","The cell's DNA","Lipids for energy","Ribosomes only"],a:1,e:"The nucleus is membrane-bound and contains the cell's DNA."},
+  {q:"The nuclear envelope is:",o:["A single membrane","A double membrane enclosing the nucleus with protein-lined pores","Made of carbohydrates","Part of the cytoskeleton"],a:1,e:"The nuclear envelope is a membrane enclosing the nucleus with protein-lined pores that allow material to move in and out."},
+  {q:"What is the function of nuclear pores?",o:["Produce ATP","Allow material to move in and out of the nucleus","Synthesize lipids","Store waste products"],a:1,e:"Nuclear pores are protein-lined openings that regulate the passage of materials between the nucleus and cytoplasm."},
+  {q:"The nucleolus is a:",o:["Separate organelle","Condensed region within the nucleus where ribosomes are formed","Type of membrane","Part of the cytoskeleton"],a:1,e:"The nucleolus is a condensed region within the nucleus where ribosomes are assembled."},
+  {q:"The primary function of the nucleus is to:",o:["Produce energy","Digest waste materials","Hold genetic information (DNA) of the cell","Synthesize lipids"],a:2,e:"The nucleus serves as the central organelle that holds the cell's genetic information in the form of DNA."},
+
+  // MITOCHONDRIA (50-55)
+  {q:"What is the primary function of mitochondria?",o:["Protein synthesis","Convert chemical energy in glucose into ATP","Store genetic information","Digest cellular waste"],a:1,e:"Mitochondria convert chemical energy stored in nutrient molecules (glucose) into ATP."},
+  {q:"ATP stands for:",o:["Adenosine triphosphate","Active transport protein","Amino terminal peptide","Actin transport pathway"],a:0,e:"ATP (adenosine triphosphate) is the usable chemical energy currency of the cell."},
+  {q:"The internal folded membranes of the mitochondria are called:",o:["Thylakoids","Cristae","Cisternae","Villi"],a:1,e:"The inner membrane folds of mitochondria are called cristae, which increase surface area for ATP production."},
+  {q:"Which is an example of a cell process that requires ATP from mitochondria?",o:["Osmosis","Simple diffusion","Muscle contraction","Passive transport"],a:2,e:"Muscle contraction is an example of a cell function that requires ATP produced by mitochondria."},
+  {q:"Mitochondria are described as:",o:["Single-membrane organelles","Membrane-bound organelles with internal folded membrane tubes","Non-membrane organelles","Part of the cytoskeleton"],a:1,e:"Mitochondria are membrane-bound organelles with an outer membrane and inner folded membrane tubes (cristae)."},
+  {q:"The space between the inner and outer mitochondrial membranes is called the:",o:["Matrix","Cristae","Intermembrane space","Cytoplasm"],a:2,e:"The intermembrane space is located between the outer and inner membranes of the mitochondrion."},
+
+  // ENDOMEMBRANE SYSTEM & GOLGI (56-63)
+  {q:"The endomembrane system functions to:",o:["Produce ATP","Manufacture and distribute cell products","Store DNA","Maintain cell shape"],a:1,e:"The endomembrane system manufactures and distributes cell products throughout the cell."},
+  {q:"Which of the following is NOT part of the endomembrane system?",o:["Golgi complex","Lysosomes","Mitochondria","Smooth ER"],a:2,e:"Mitochondria are not part of the endomembrane system. The system includes vesicles, Golgi, lysosomes, smooth ER, and rough ER."},
+  {q:"A vesicle is best described as:",o:["A solid protein structure","A membranous sac bounded by a lipid bilayer membrane","A strand of DNA","A type of cytoskeletal fiber"],a:1,e:"A vesicle is a spherical, hollow organelle bounded by a lipid bilayer membrane."},
+  {q:"The Golgi complex/apparatus is made of:",o:["A single large vesicle","A stack of large flattened vesicles surrounded by many small vesicles","Protein fibers","DNA strands"],a:1,e:"The Golgi complex consists of stacked, large flattened vesicles (cisternae) surrounded by many small vesicles."},
+  {q:"Which of the following is a function of the Golgi apparatus?",o:["DNA replication","Secretion of proteins out of the cell","ATP production","Cell division"],a:1,e:"The Golgi apparatus functions in vesicle transport, including secretion of proteins and other substances out of the cell."},
+  {q:"The Golgi apparatus has a 'receiving' side and a:",o:["'Destruction' side","'Shipping' side","'Replication' side","'Absorption' side"],a:1,e:"The Golgi has a receiving side (from ER) and a shipping side (sending vesicles to their destinations)."},
+  {q:"The Golgi apparatus receives proteins from outside the cell via:",o:["Diffusion","Endocytosis vesicles","Osmosis","Active transport pumps"],a:1,e:"The Golgi receives proteins from outside the cell via endocytosis vesicles."},
+  {q:"Which organelle repackages and transports proteins within the cell?",o:["Nucleus","Ribosome","Golgi apparatus","Lysosome"],a:2,e:"The Golgi apparatus repackages and transports proteins within the cell."},
+
+  // ROUGH ER & RIBOSOMES (64-71)
+  {q:"The rough endoplasmic reticulum (RER) is 'rough' because:",o:["It has a bumpy membrane","It has ribosomes on its outer surface","It contains lipids","It is damaged"],a:1,e:"The rough ER appears rough because it has ribosomes studded on its outer surface."},
+  {q:"The primary function of the rough ER is to:",o:["Synthesize lipids","Synthesize and transport proteins","Produce ATP","Digest waste"],a:1,e:"The rough ER is the site of protein synthesis and protein transport."},
+  {q:"Ribosomes are made of:",o:["DNA and lipids","RNA and protein subunits","Only carbohydrates","Cholesterol and phospholipids"],a:1,e:"Ribosomes are composed of RNA and protein subunits."},
+  {q:"The main function of ribosomes is to:",o:["Store energy","Translate mRNA into polypeptide chains (make proteins)","Replicate DNA","Transport lipids"],a:1,e:"Ribosomes translate mRNA to polypeptide chains, essentially making proteins."},
+  {q:"Ribosomes can be found:",o:["Only in the nucleus","Only on the rough ER","Free in the cytoplasm and attached to the rough ER","Only in mitochondria"],a:2,e:"Ribosomes are found both free-floating in the cytoplasm and attached to the rough ER surface."},
+  {q:"Transport vesicles bud off from which organelle to carry proteins to the Golgi?",o:["Nucleus","Lysosome","Rough ER","Mitochondria"],a:2,e:"Transport vesicles bud off from the rough ER carrying newly synthesized proteins to the Golgi apparatus."},
+  {q:"The rough ER is a membrane-bound system of:",o:["Spheres","Tubes with ribosomes on the outer surface","Flat discs","Protein fibers"],a:1,e:"The rough ER is a membrane-bound system of tubes with ribosomes on the outer surface."},
+  {q:"Which molecule does the ribosome read to build a protein?",o:["DNA","tRNA","mRNA","ATP"],a:2,e:"Ribosomes read mRNA (messenger RNA) to translate the genetic code into a polypeptide chain."},
+
+  // SMOOTH ER (72-75)
+  {q:"The smooth endoplasmic reticulum (SER) functions to:",o:["Synthesize proteins","Synthesize lipids for membranes and steroid hormones","Digest food particles","Store DNA"],a:1,e:"The smooth ER synthesizes lipids for membranes and steroid hormones, and transports lipids as vesicles."},
+  {q:"How does the smooth ER differ from the rough ER?",o:["It has ribosomes","It lacks ribosomes on its surface","It is located in the nucleus","It produces ATP"],a:1,e:"The smooth ER lacks ribosomes on its surface, unlike the rough ER which has ribosomes."},
+  {q:"The smooth ER transports lipids in the form of:",o:["Free fatty acids","Vesicles","ATP molecules","DNA strands"],a:1,e:"The smooth ER transports lipids in the form of vesicles."},
+  {q:"Which organelle would be most abundant in cells that produce large amounts of steroid hormones?",o:["Rough ER","Smooth ER","Lysosomes","Nucleus"],a:1,e:"Since smooth ER synthesizes steroid hormones, cells that produce lots of steroids would have abundant smooth ER."},
+
+  // LYSOSOMES & PEROXISOMES (76-80)
+  {q:"Lysosomes contain:",o:["DNA","Digestive enzymes","Ribosomes","Lipids for energy"],a:1,e:"Lysosomes are membrane-bound vesicles containing digestive enzymes."},
+  {q:"What is the primary function of lysosomes?",o:["Energy production","Digest proteins, break down foreign material and internal cell contents","Protein synthesis","DNA storage"],a:1,e:"Lysosomes digest proteins and other products received from the Golgi, break down foreign material, and break down internal cell contents."},
+  {q:"Lysosomes receive material for digestion primarily from the:",o:["Nucleus","Golgi apparatus","Smooth ER","Mitochondria"],a:1,e:"Lysosomes digest proteins or other products received from the Golgi apparatus."},
+  {q:"Peroxisomes function to:",o:["Synthesize proteins","House oxidative metabolism","Produce lipids","Store genetic information"],a:1,e:"Peroxisomes house oxidative metabolism, breaking down potentially harmful molecules."},
+  {q:"Lysosomes are found in:",o:["Only plant cells","Only animal cells","Both plant and animal cells","Neither plant nor animal cells"],a:1,e:"Lysosomes are found primarily in animal cells. Plants may have lytic vacuoles that act like lysosomes."},
+
+  // TRANSPORT - PASSIVE (81-90)
+  {q:"Passive transport differs from active transport because passive transport:",o:["Requires ATP","Does not require energy input","Moves against the concentration gradient","Uses carrier proteins exclusively"],a:1,e:"Passive transport does not require energy input; molecules move down their concentration gradient."},
+  {q:"Diffusion is the movement of molecules from:",o:["Low to high concentration","High to low concentration","Equal concentration on both sides","Against the concentration gradient"],a:1,e:"Diffusion is the dispersal of particles from high concentration to low concentration."},
+  {q:"Which of the following is an example of passive transport?",o:["Sodium-potassium pump","Endocytosis","Diffusion","Exocytosis"],a:2,e:"Diffusion is a type of passive transport that requires no energy input."},
+  {q:"Osmosis is specifically the diffusion of:",o:["Solutes across a membrane","Water across a selectively permeable membrane","Proteins across a membrane","Lipids through the cytoplasm"],a:1,e:"Osmosis is the diffusion of water across a selectively (semi)permeable membrane."},
+  {q:"During osmosis, water moves from an area of:",o:["High solute to low solute concentration","Low water concentration to high water concentration","Lower solute concentration to higher solute concentration","High protein to low protein"],a:2,e:"Water moves from areas of lower solute concentration (more water) to higher solute concentration (less water)."},
+  {q:"In osmosis, large or polar solutes:",o:["Freely cross the membrane","Cannot cross the membrane","Move faster than water","Carry water with them"],a:1,e:"During osmosis, water diffuses across the membrane but large or polar solutes cannot cross."},
+  {q:"A hypertonic solution causes a cell to:",o:["Swell and burst (lyse)","Shrivel (crenate)","Remain normal","Divide"],a:1,e:"In a hypertonic solution (more solutes outside), water diffuses out of the cell, causing it to shrivel."},
+  {q:"A hypotonic solution causes a cell to:",o:["Shrivel","Swell and potentially lyse (burst)","Stay the same","Lose its nucleus"],a:1,e:"In a hypotonic solution (more solutes inside the cell), water diffuses into the cell, causing it to swell and potentially burst."},
+  {q:"An isotonic solution results in:",o:["Net water movement into the cell","Net water movement out of the cell","Equal movement of water in and out","Complete dehydration of the cell"],a:2,e:"In an isotonic solution, solute concentration is equal inside and outside, so water moves equally in both directions."},
+  {q:"Facilitated transport involves molecules crossing the membrane via:",o:["Direct diffusion through the lipid bilayer","Transmembrane protein channels","ATP-powered pumps","Vesicles"],a:1,e:"Facilitated transport moves molecules through the membrane via transmembrane protein channels."},
+
+  // TRANSPORT - ACTIVE & VESICLE (91-100)
+  {q:"Active transport requires:",o:["No energy","Energy, usually ATP","Only water","Osmotic pressure"],a:1,e:"Active transport requires energy, usually in the form of ATP, to move solutes against their concentration gradient."},
+  {q:"Active transport moves solutes:",o:["Down their concentration gradient","Against their concentration gradient","Only in one direction","Without proteins"],a:1,e:"Active transport moves solutes against (up) their concentration gradient, from low to high concentration."},
+  {q:"The sodium-potassium pump moves:",o:["3 Na+ out and 2 K+ in","2 Na+ out and 3 K+ in","Equal Na+ and K+","Only sodium"],a:0,e:"The Na+/K+ pump moves 3 sodium ions out of the cell and 2 potassium ions into the cell per cycle."},
+  {q:"The sodium-potassium pump is an example of:",o:["Passive transport","Osmosis","Active transport","Simple diffusion"],a:2,e:"The Na+/K+ pump requires ATP and moves ions against their concentration gradients, making it active transport."},
+  {q:"Endocytosis is the process of:",o:["Releasing materials from the cell","Bringing materials into the cell via vesicles","Diffusion across the membrane","DNA replication"],a:1,e:"Endocytosis is the inward transport of large molecules into the cell via vesicles."},
+  {q:"Exocytosis is the process of:",o:["Bringing materials into the cell","Releasing materials out of the cell via vesicles","Osmosis","Active transport of ions"],a:1,e:"Exocytosis is the outward transport of materials out of the cell via vesicles fusing with the plasma membrane."},
+  {q:"Which molecules typically cross the membrane through facilitated transport?",o:["Small hydrophobic molecules like O2 and CO2","Hydrophilic and large molecules like glucose and salt ions","Only water","Only lipids"],a:1,e:"Hydrophilic and large molecules (H2O, glucose, salt ions) cross slowly via transmembrane protein channels in facilitated transport."},
+  {q:"Which molecules can pass directly through the lipid bilayer by simple diffusion?",o:["Large polar molecules","Hydrophobic and small molecules like CO2 and O2","Proteins","Glucose"],a:1,e:"Hydrophobic and small molecules like CO2 and O2 can pass rapidly through the lipid bilayer by simple diffusion."},
+  {q:"In a solution, the solute is defined as:",o:["The substance present in greater proportion","The substance being dissolved (lower proportion)","Always water","The container"],a:1,e:"The solute is what is dissolved and is present in lower proportion in the solution."},
+  {q:"In a solution, the solvent is defined as:",o:["The substance being dissolved","The substance doing the dissolving (higher proportion of molecules)","Always a solid","The solute"],a:1,e:"The solvent is the substance doing the dissolving, present in higher proportion. In biological systems, this is typically water."},
+];
+
+const letters = ['A','B','C','D'];
+let answered = {};
+let selections = {};
+let correctTotal = 0;
+
+function renderQuestions(filter = 'all') {
+  const container = document.getElementById('questionsContainer');
+  container.innerHTML = '';
+  questions.forEach((q, i) => {
+    const num = i + 1;
+    if (filter === 'unanswered' && answered[i] !== undefined) return;
+    if (filter === 'wrong' && answered[i] !== 'wrong') return;
+
+    const card = document.createElement('div');
+    card.className = 'question-card';
+    card.id = 'q' + i;
+    if (answered[i] === 'correct') card.classList.add('answered-correct');
+    if (answered[i] === 'wrong') card.classList.add('answered-wrong');
+
+    let optionsHtml = q.o.map((opt, oi) => {
+      let cls = 'option';
+      if (answered[i] !== undefined) {
+        cls += ' disabled';
+        if (oi === q.a) cls += ' correct';
+        if (answered[i] === 'wrong' && oi === selections[i]) cls += ' wrong';
+      }
+      return `<div class="${cls}" onclick="selectAnswer(${i}, ${oi})" data-qi="${i}" data-oi="${oi}">
+        <div class="letter">${letters[oi]}</div>
+        <div>${opt}</div>
+      </div>`;
+    }).join('');
+
+    card.innerHTML = `
+      <div class="q-number">Question ${num}</div>
+      <div class="q-text">${q.q}</div>
+      <div class="options">${optionsHtml}</div>
+      <div class="explanation ${answered[i] !== undefined ? 'show' : ''}" id="exp${i}">${q.e}</div>
+    `;
+    container.appendChild(card);
+  });
+}
+
+function selectAnswer(qi, oi) {
+  if (answered[qi] !== undefined) return;
+  const q = questions[qi];
+  const isCorrect = oi === q.a;
+
+  answered[qi] = isCorrect ? 'correct' : 'wrong';
+  selections[qi] = oi;
+  if (isCorrect) correctTotal++;
+
+  const card = document.getElementById('q' + qi);
+  card.classList.add(isCorrect ? 'answered-correct' : 'answered-wrong');
+
+  const options = card.querySelectorAll('.option');
+  options.forEach((opt, idx) => {
+    opt.classList.add('disabled');
+    if (idx === q.a) opt.classList.add('correct');
+    if (!isCorrect && idx === oi) opt.classList.add('wrong');
+  });
+
+  document.getElementById('exp' + qi).classList.add('show');
+  updateStats();
+}
+
+function updateStats() {
+  const count = Object.keys(answered).length;
+  document.getElementById('answeredCount').textContent = count;
+  document.getElementById('correctCount').textContent = correctTotal;
+  document.getElementById('scorePercent').textContent = count > 0 ? Math.round((correctTotal / count) * 100) + '%' : '0%';
+  document.getElementById('progressFill').style.width = (count / 100 * 100) + '%';
+}
+
+function submitTest() {
+  const count = Object.keys(answered).length;
+  const pct = count > 0 ? Math.round((correctTotal / count) * 100) : 0;
+  const panel = document.getElementById('resultsPanel');
+  const circle = document.getElementById('scoreCircle');
+  const text = document.getElementById('resultsText');
+
+  circle.textContent = pct + '%';
+  circle.className = 'score-circle ' + (pct >= 80 ? 'great' : pct >= 60 ? 'ok' : 'low');
+  text.textContent = `You answered ${correctTotal} out of ${count} questions correctly.` +
+    (count < 100 ? ` (${100 - count} unanswered)` : '');
+  panel.classList.add('show');
+  panel.scrollIntoView({ behavior: 'smooth' });
+}
+
+function resetTest() {
+  answered = {};
+  selections = {};
+  correctTotal = 0;
+  updateStats();
+  document.getElementById('resultsPanel').classList.remove('show');
+  renderQuestions('all');
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  document.querySelector('.filter-btn').classList.add('active');
+}
+
+function filterQuestions(filter, btn) {
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+  renderQuestions(filter);
+}
+
+document.addEventListener('DOMContentLoaded', function() { renderQuestions(); });
+</script>
+</body>
+</html>
