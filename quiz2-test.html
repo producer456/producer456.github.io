@@ -1,0 +1,735 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Quiz 2 Prep — BIO 40A (Weeks 4 & 5)</title>
+<style>
+  :root {
+    --bg: #0f0f0f;
+    --card: #1a1a2e;
+    --accent: #6c63ff;
+    --accent2: #00d2ff;
+    --correct: #00c853;
+    --wrong: #ff1744;
+    --warn: #ffab00;
+    --text: #e0e0e0;
+    --text2: #999;
+    --border: #2a2a4a;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.6;
+    min-height: 100vh;
+  }
+  .header {
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+    padding: 2rem;
+    text-align: center;
+    border-bottom: 2px solid var(--accent);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  .header h1 {
+    font-size: 1.8rem;
+    background: linear-gradient(90deg, var(--accent), var(--accent2));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    margin-bottom: 0.5rem;
+  }
+  .header .subtitle { color: var(--text2); font-size: 0.9rem; margin-bottom: 0.75rem; }
+  .header .stats {
+    display: flex;
+    justify-content: center;
+    gap: 2rem;
+    font-size: 0.95rem;
+    color: var(--text2);
+  }
+  .header .stats span { color: var(--accent2); font-weight: 700; }
+  .progress-bar {
+    width: 100%;
+    height: 4px;
+    background: var(--border);
+    position: absolute;
+    bottom: 0;
+    left: 0;
+  }
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent), var(--accent2));
+    transition: width 0.4s ease;
+    width: 0%;
+  }
+  .container {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 1.5rem;
+  }
+  .question-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin-bottom: 1rem;
+    transition: border-color 0.3s;
+  }
+  .question-card.answered-correct { border-color: var(--correct); }
+  .question-card.answered-wrong { border-color: var(--wrong); }
+  .q-number {
+    font-size: 0.75rem;
+    color: var(--accent);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 0.25rem;
+  }
+  .q-cat {
+    display: inline-block;
+    font-size: 0.7rem;
+    color: var(--text2);
+    background: rgba(108,99,255,0.1);
+    border: 1px solid var(--border);
+    padding: 0.15rem 0.55rem;
+    border-radius: 999px;
+    margin-bottom: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  .q-text {
+    font-size: 1.05rem;
+    font-weight: 600;
+    margin-bottom: 1rem;
+    color: #fff;
+  }
+  .options { display: flex; flex-direction: column; gap: 0.5rem; }
+  .option {
+    display: flex;
+    align-items: center;
+    padding: 0.75rem 1rem;
+    background: rgba(255,255,255,0.03);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-size: 0.95rem;
+  }
+  .option:hover:not(.disabled) {
+    background: rgba(108,99,255,0.1);
+    border-color: var(--accent);
+  }
+  .option.selected { background: rgba(108,99,255,0.15); border-color: var(--accent); }
+  .option.correct { background: rgba(0,200,83,0.15); border-color: var(--correct); color: var(--correct); }
+  .option.wrong { background: rgba(255,23,68,0.15); border-color: var(--wrong); color: var(--wrong); }
+  .option.disabled { cursor: default; opacity: 0.7; }
+  .option.disabled.correct { opacity: 1; }
+  .option .letter {
+    width: 28px; height: 28px;
+    border-radius: 50%;
+    border: 2px solid var(--border);
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 700; font-size: 0.8rem;
+    margin-right: 0.75rem;
+    flex-shrink: 0;
+  }
+  .option.correct .letter { border-color: var(--correct); color: var(--correct); }
+  .option.wrong .letter { border-color: var(--wrong); color: var(--wrong); }
+  .results-panel {
+    background: var(--card);
+    border: 2px solid var(--accent);
+    border-radius: 16px;
+    padding: 2rem;
+    margin: 2rem 0;
+    display: none;
+  }
+  .results-panel.show { display: block; }
+  .results-panel h2 { font-size: 1.5rem; margin-bottom: 1rem; color: #fff; text-align: center; }
+  .results-panel h3 {
+    font-size: 1rem;
+    margin: 1.5rem 0 0.75rem;
+    color: var(--accent2);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+  .score-circle {
+    width: 140px; height: 140px;
+    border-radius: 50%;
+    border: 6px solid var(--accent);
+    display: flex; align-items: center; justify-content: center;
+    margin: 1rem auto;
+    font-size: 2.5rem; font-weight: 800;
+  }
+  .score-circle.great { border-color: var(--correct); color: var(--correct); }
+  .score-circle.ok { border-color: var(--warn); color: var(--warn); }
+  .score-circle.low { border-color: var(--wrong); color: var(--wrong); }
+  .results-text { text-align: center; color: var(--text); margin-bottom: 0.5rem; }
+  .results-sub { text-align: center; color: var(--text2); font-size: 0.9rem; margin-bottom: 0.5rem; }
+  .cat-list { display: flex; flex-direction: column; gap: 0.5rem; margin-top: 0.5rem; }
+  .cat-row {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 0.75rem;
+    align-items: center;
+    background: rgba(255,255,255,0.03);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 0.65rem 0.9rem;
+  }
+  .cat-row.weak { border-color: var(--wrong); background: rgba(255,23,68,0.06); }
+  .cat-row.solid { border-color: var(--correct); background: rgba(0,200,83,0.06); }
+  .cat-name { font-weight: 600; color: #fff; font-size: 0.95rem; }
+  .cat-bar-wrap {
+    height: 4px;
+    background: var(--border);
+    border-radius: 999px;
+    margin-top: 0.3rem;
+    overflow: hidden;
+  }
+  .cat-bar {
+    height: 100%;
+    border-radius: 999px;
+    background: var(--accent);
+  }
+  .cat-bar.weak { background: var(--wrong); }
+  .cat-bar.solid { background: var(--correct); }
+  .cat-score { font-size: 0.9rem; color: var(--text2); white-space: nowrap; }
+  .cat-score b { color: #fff; }
+  .study-tip {
+    margin: 1rem 0;
+    padding: 0.85rem 1rem;
+    border-left: 3px solid var(--warn);
+    background: rgba(255,171,0,0.06);
+    border-radius: 4px;
+    font-size: 0.9rem;
+    color: var(--text);
+  }
+  .review-prompt {
+    margin-top: 1.5rem;
+    padding: 1rem;
+    background: rgba(0,210,255,0.05);
+    border: 1px solid var(--accent2);
+    border-radius: 10px;
+    text-align: center;
+  }
+  .review-prompt p { margin-bottom: 0.75rem; color: var(--text); }
+  .btn {
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    color: #fff;
+    border: none;
+    padding: 0.75rem 1.5rem;
+    border-radius: 8px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    margin: 0.25rem;
+    transition: transform 0.2s, box-shadow 0.2s;
+  }
+  .btn:hover { transform: translateY(-2px); box-shadow: 0 4px 20px rgba(108,99,255,0.4); }
+  .btn.secondary { background: var(--card); border: 1px solid var(--border); }
+  .btn.danger { background: linear-gradient(135deg,#ff1744,#ff6d00); }
+  .controls {
+    display: flex;
+    justify-content: center;
+    gap: 0.5rem;
+    margin: 1.5rem 0;
+    flex-wrap: wrap;
+  }
+  .filter-btn {
+    background: var(--card);
+    color: var(--text2);
+    border: 1px solid var(--border);
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    cursor: pointer;
+    font-size: 0.85rem;
+    transition: all 0.2s;
+  }
+  .filter-btn:hover, .filter-btn.active {
+    border-color: var(--accent);
+    color: var(--accent);
+    background: rgba(108,99,255,0.1);
+  }
+  .review-banner {
+    display: none;
+    background: rgba(0,210,255,0.08);
+    border: 1px solid var(--accent2);
+    border-radius: 10px;
+    padding: 0.75rem 1rem;
+    margin-bottom: 1rem;
+    font-size: 0.9rem;
+    color: var(--text);
+    text-align: center;
+  }
+  .review-banner.show { display: block; }
+  .empty-state {
+    text-align: center;
+    padding: 3rem 1rem;
+    color: var(--text2);
+  }
+  .empty-state h3 { color: var(--correct); margin-bottom: 0.5rem; }
+  @media (max-width: 600px) {
+    .header h1 { font-size: 1.3rem; }
+    .header .stats { gap: 1rem; font-size: 0.8rem; }
+    .container { padding: 1rem; }
+    .question-card { padding: 1rem; }
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>Quiz 2 Prep — Weeks 4 & 5</h1>
+  <div class="subtitle">Tissues · Membranes · Integumentary · Embryonic Development</div>
+  <div class="stats">
+    <div>Answered: <span id="answeredCount">0</span>/100</div>
+    <div>Correct: <span id="correctCount">0</span></div>
+    <div>Score: <span id="scorePercent">0%</span></div>
+  </div>
+  <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+</div>
+
+<div class="container">
+  <div class="controls">
+    <button class="filter-btn active" data-filter="all" onclick="filterQuestions('all', this)">All</button>
+    <button class="filter-btn" data-filter="unanswered" onclick="filterQuestions('unanswered', this)">Unanswered</button>
+    <button class="filter-btn" data-filter="wrong" onclick="filterQuestions('wrong', this)">Missed</button>
+    <button class="btn" onclick="submitTest()">Submit Test</button>
+    <button class="btn danger" onclick="resetTest()">Reset</button>
+  </div>
+
+  <div class="review-banner" id="reviewBanner">
+    Review mode — only showing questions you missed. Click an answer to see the correct one.
+  </div>
+
+  <div id="questionsContainer"></div>
+
+  <div class="results-panel" id="resultsPanel">
+    <h2>Your Results</h2>
+    <div class="score-circle" id="scoreCircle">0%</div>
+    <p class="results-text" id="resultsText"></p>
+    <p class="results-sub" id="resultsSub"></p>
+
+    <h3>Areas to Focus On</h3>
+    <div id="studyTip" class="study-tip" style="display:none;"></div>
+    <div class="cat-list" id="catList"></div>
+
+    <div class="review-prompt" id="reviewPrompt">
+      <p id="reviewPromptText">Want to go through the questions you missed again?</p>
+      <button class="btn" id="reviewBtn" onclick="startReview()">Yes, review missed questions</button>
+      <button class="btn secondary" onclick="closeResults()">Not now</button>
+      <button class="btn danger" onclick="resetTest()">Retake whole test</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const CATEGORIES = {
+  basics:       "Tissue Basics & Histology",
+  embryo:       "Embryonic Development",
+  epithelial:   "Epithelial Tissue",
+  connective:   "Connective Tissue",
+  muscle:       "Muscle Tissue",
+  nervous:      "Nervous Tissue",
+  membranes:    "Body Membranes",
+  skin:         "Integumentary System (Skin)",
+  inflammation: "Inflammation & Tissue Repair"
+};
+
+const questions = [
+  {q:"What are the four primary tissue types in the human body?",o:["Epidermis, Dermis, Hypodermis, Fascia","Epithelial, Connective, Muscle, Nervous","Squamous, Cuboidal, Columnar, Transitional","Blood, Bone, Cartilage, Adipose"],a:1,c:"basics"},
+  {q:"The microscopic study of tissue appearance, organization, and function is called:",o:["Cytology","Pathology","Embryology","Histology"],a:3,c:"basics"},
+  {q:"At which level of structural organization do two or more different tissues combine to form a working unit?",o:["Cellular level","Organ level","Organ system level","Chemical level"],a:1,c:"basics"},
+  {q:"The very first embryonic cells (formed after the zygote undergoes rapid mitosis) have the capacity to divide and develop into any cell type in the body. These are called:",o:["Pluripotent cells","Multipotent cells","Totipotent cells","Unipotent cells"],a:2,c:"embryo"},
+  {q:"Which embryonic germ layer gives rise to the epidermis, the nervous system, and some cranial bones?",o:["Ectoderm","Mesoderm","Endoderm","Mesenchyme"],a:0,c:"embryo"},
+  {q:"Muscle tissue, bone, blood, and connective tissues proper all derive from which embryonic germ layer?",o:["Ectoderm","Mesoderm","Endoderm","Epiblast"],a:1,c:"embryo"},
+  {q:"Which of the following tissues arises from ALL THREE embryonic germ layers (ectoderm, mesoderm, and endoderm)?",o:["Nervous tissue","Connective tissue","Muscle tissue","Epithelial tissue"],a:3,c:"epithelial"},
+  {q:"Which of the following is a key characteristic of epithelial tissue?",o:["It contains scattered cells in an abundant extracellular matrix","It is highly vascularized","It lacks blood vessels (avascularity)","It has a very low cell division rate"],a:2,c:"epithelial"},
+  {q:"Epithelial tissue has a directional orientation, meaning it has an exposed apical surface and an attached basal surface. What is this characteristic called?",o:["Polarity","Cellularity","Innervation","Excitability"],a:0,c:"epithelial"},
+  {q:"Epithelial tissue is anchored to underlying connective tissue via a specialized structure called the:",o:["Synovial membrane","Basement membrane","Cutaneous membrane","Lamina propria"],a:1,c:"epithelial"},
+  {q:"Which type of cell junction seals adjacent epithelial cells together, preventing the movement of substances through the extracellular space between them?",o:["Gap junctions","Desmosomes","Tight junctions","Hemidesmosomes"],a:2,c:"epithelial"},
+  {q:"Which cell junctions allow for electrical and metabolic coupling by facilitating the exchange of small molecules and ions between the cytoplasm of adjacent cells?",o:["Tight junctions","Adherens","Gap junctions","Anchoring junctions"],a:2,c:"epithelial"},
+  {q:"How would you classify an epithelium consisting of a single layer of flat, thin, \"squashed\" cells?",o:["Simple squamous","Stratified squamous","Simple cuboidal","Pseudostratified columnar"],a:0,c:"epithelial"},
+  {q:"An epithelium that appears layered because its nuclei are at varying depths, but where all cells actually touch the basement membrane, is called:",o:["Stratified columnar","Pseudostratified columnar","Transitional","Simple cuboidal"],a:1,c:"epithelial"},
+  {q:"Which specialized type of stratified epithelium is found in the urinary bladder and can change the shape of its apical cells as it stretches?",o:["Stratified squamous","Simple columnar","Transitional","Pseudostratified"],a:2,c:"epithelial"},
+  {q:"Glands that are ductless and secrete their hormones directly into the interstitial fluid and bloodstream are classified as:",o:["Exocrine glands","Endocrine glands","Holocrine glands","Merocrine glands"],a:1,c:"epithelial"},
+  {q:"Sebaceous (oil) glands secrete their contents by having the entire mature cell rupture and die. What mode of secretion is this?",o:["Merocrine secretion","Apocrine secretion","Holocrine secretion","Endocrine secretion"],a:2,c:"epithelial"},
+  {q:"What are goblet cells?",o:["Multicellular exocrine glands that secrete sebum","Unicellular exocrine glands that secrete mucin/mucus","Endocrine cells that secrete hormones in the digestive tract","Connective tissue cells that store fat"],a:1,c:"epithelial"},
+  {q:"Unlike epithelial tissue, connective tissue is characterized by cells dispersed in an abundant extracellular matrix. What two main components make up this matrix?",o:["Blood and lymph","Apical and basal surfaces","Ground substance and protein fibers","Neurons and neuroglia"],a:2,c:"connective"},
+  {q:"What is the most abundant cell type in connective tissue proper that is responsible for secreting protein fibers and matrix?",o:["Adipocyte","Macrophage","Osteocyte","Fibroblast"],a:3,c:"connective"},
+  {q:"Which type of loose connective tissue is considered the \"universal packing material\" that supports organs and underlies most epithelia?",o:["Reticular tissue","Areolar tissue","Adipose tissue","Dense regular tissue"],a:1,c:"connective"},
+  {q:"Tendons and ligaments, which require high tensile strength in a single direction, are primarily made of which type of connective tissue?",o:["Dense regular connective tissue","Dense irregular connective tissue","Elastic cartilage","Areolar tissue"],a:0,c:"connective"},
+  {q:"Which of the following is classified as a fluid connective tissue?",o:["Cartilage","Bone","Blood","Adipose"],a:2,c:"connective"},
+  {q:"Which type of muscle tissue is characterized by short, branched, striated cells that contain a single central nucleus and intercalated discs?",o:["Skeletal muscle","Smooth muscle","Cardiac muscle","Voluntary muscle"],a:2,c:"muscle"},
+  {q:"Which type of muscle tissue is spindle-shaped, lacks striations, and controls involuntary movements in the walls of hollow organs?",o:["Skeletal muscle","Cardiac muscle","Smooth muscle","Mesenchyme"],a:2,c:"muscle"},
+  {q:"Nervous tissue is composed of two major cell types. Which cells are the excitable cells responsible for sending and receiving electrochemical signals?",o:["Neuroglia","Neurons","Fibroblasts","Chondrocytes"],a:1,c:"nervous"},
+  {q:"Which type of tissue membrane is composed solely of connective tissue and lines the cavities of freely movable joints to produce lubricating fluid?",o:["Mucous membrane","Serous membrane","Synovial membrane","Cutaneous membrane"],a:2,c:"membranes"},
+  {q:"The pleura, pericardium, and peritoneum are membranous bags that line closed body cavities and cover organs. What type of epithelial membrane are they?",o:["Mucous membrane","Serous membrane","Cutaneous membrane","Synovial membrane"],a:1,c:"membranes"},
+  {q:"Which epithelial membrane lines body cavities and hollow passageways that open to the external environment, such as the respiratory and digestive tracts?",o:["Cutaneous membrane","Serous membrane","Mucous membrane","Synovial membrane"],a:2,c:"membranes"},
+  {q:"Embryonic connective tissue, which supplies the stem cells (mesenchyme) for all other connective tissues, is derived exclusively from which germ layer?",o:["Ectoderm","Mesoderm","Endoderm","Neuroectoderm"],a:1,c:"embryo"},
+  {q:"Which of the following cell types in nervous tissue outnumbers neurons by roughly 3 to 1 and provides structural and functional support without conducting electrical impulses?",o:["Chondrocytes","Fibroblasts","Neuroglia (Glial cells)","Osteocytes"],a:2,c:"nervous"},
+  {q:"The branch-like extensions of a neuron that are specialized to receive incoming signals from other cells are called:",o:["Axons","Dendrites","Synaptic knobs","Myelin sheaths"],a:1,c:"nervous"},
+  {q:"When an action potential reaches the axon terminal of a neuron, it triggers the release of chemical messengers that cross the synaptic cleft. What are these chemicals called?",o:["Hormones","Neurotransmitters","Endorphins","Electrolytes"],a:1,c:"nervous"},
+  {q:"Which structure insulates the axon of a neuron to allow for faster transmission of electrical impulses?",o:["Dendrite","Soma","Myelin sheath","Axon hillock"],a:2,c:"nervous"},
+  {q:"Which type of tissue membrane lines sealed body cavities that do not open to the outside environment, such as the pleural and pericardial cavities?",o:["Mucous membrane","Serous membrane","Cutaneous membrane","Synovial membrane"],a:1,c:"membranes"},
+  {q:"Membranes that line cavities and passageways open to the exterior, such as the digestive, respiratory, and urinary tracts, are known as:",o:["Synovial membranes","Serous membranes","Mucous membranes","Cutaneous membranes"],a:2,c:"membranes"},
+  {q:"The cutaneous membrane, commonly known as the skin, is composed of which type of epithelium resting on connective tissue?",o:["Simple squamous epithelium","Pseudostratified columnar epithelium","Transitional epithelium","Keratinized stratified squamous epithelium"],a:3,c:"membranes"},
+  {q:"Which of the following membranes is made ENTIRELY of connective tissue (lacking an epithelial layer) and lines the cavities of freely movable joints?",o:["Mucous membrane","Serous membrane","Synovial membrane","Cutaneous membrane"],a:2,c:"membranes"},
+  {q:"Sebaceous (oil) glands of the skin release their secretions by the rupture and destruction of the entire gland cell. This is an example of which type of secretion?",o:["Merocrine","Apocrine","Holocrine","Endocrine"],a:2,c:"epithelial"},
+  {q:"In cartilage, the mature cells (chondrocytes) reside in small spaces or \"little lakes\" within the extracellular matrix known as:",o:["Osteons","Lacunae","Canaliculi","Fibroblasts"],a:1,c:"connective"},
+  {q:"Which of the following characteristics explains why cartilage heals very slowly after an injury?",o:["It is highly innervated.","It is avascular (lacks a direct blood supply).","It contains too much calcium.","It consists mainly of dense regular fibers."],a:1,c:"connective"},
+  {q:"Which type of cartilage is the most common in the body, appears smooth and glassy under a microscope, and provides support for joints and the respiratory tract?",o:["Fibrocartilage","Elastic cartilage","Hyaline cartilage","Reticular cartilage"],a:2,c:"connective"},
+  {q:"Unlike cartilage, the rigid extracellular matrix of bone is primarily composed of collagen fibers combined with:",o:["Chondroitin sulfate","Hyaluronic acid","Calcium salts","Reticular fibers"],a:2,c:"connective"},
+  {q:"Dense bone organized into concentric columns of bone tissue with a central canal containing blood vessels is called:",o:["Spongy bone","Compact bone","Trabecular bone","Cancellous bone"],a:1,c:"connective"},
+  {q:"The lighter, porous type of bone tissue that contains red bone marrow and is found inside bones is called:",o:["Compact bone","Dense bone","Spongy (cancellous) bone","Osteon"],a:2,c:"connective"},
+  {q:"Blood is classified as a fluid connective tissue. What is the fluid ground substance (matrix) of blood called?",o:["Lymph","Serum","Plasma","Interstitial fluid"],a:2,c:"connective"},
+  {q:"Which of the following are the formed cellular elements found in blood?",o:["Fibroblasts, macrophages, adipocytes","Erythrocytes, leukocytes, platelets","Chondrocytes, osteocytes, reticular cells","Neurons, astrocytes, microglia"],a:1,c:"connective"},
+  {q:"The extracellular matrix of connective tissues is composed of protein fibers and a viscous fluid or semi-solid material known as:",o:["Plasma","Cytoplasm","Ground substance","Interstitial fluid"],a:2,c:"connective"},
+  {q:"Which type of loose connective tissue has a 'chicken wire' or 'bubble wrap' appearance under the microscope due to large empty-looking spaces used for fat storage?",o:["Areolar tissue","Reticular tissue","Dense regular tissue","Adipose tissue"],a:3,c:"connective"},
+  {q:"Which type of dense connective tissue features thick, parallel bundles of collagen fibers and is found in tendons and ligaments to resist stretching in one direction?",o:["Dense regular connective tissue","Dense irregular connective tissue","Elastic connective tissue","Areolar connective tissue"],a:0,c:"connective"},
+  {q:"Under a microscope, which feature is uniquely characteristic of cardiac muscle tissue, differentiating it from skeletal muscle?",o:["Multiple peripheral nuclei","Lack of striations","Intercalated discs","Spindle-shaped cells"],a:2,c:"muscle"},
+  {q:"Which of the following best describes the histological appearance of smooth muscle cells?",o:["Spindle-shaped (fusiform) with a single central nucleus and no visible striations","Long, cylindrical, striated, and multinucleated","Short, branched, striated, with a single nucleus","Tightly packed cube-like cells with large round nuclei"],a:0,c:"muscle"},
+  {q:"When viewing skeletal muscle under a microscope, the repeating dark and light bands created by actin and myosin alignment are known as:",o:["Intercalated discs","Striations","Gap junctions","Lacunae"],a:1,c:"muscle"},
+  {q:"Which muscle type is primarily responsible for the voluntary movement of the body, generating heat through shivering, and maintaining posture?",o:["Cardiac muscle","Smooth muscle","Skeletal muscle","Visceral muscle"],a:2,c:"muscle"},
+  {q:"Which of the following is a type of neuroglial cell found specifically in the central nervous system (CNS)?",o:["Schwann cell","Astrocyte","Satellite cell","Fibroblast"],a:1,c:"nervous"},
+  {q:"Dense irregular connective tissue contains randomly arranged collagen fibers, enabling it to withstand tension from many directions. Where is this tissue primarily found?",o:["Tendons","Ligaments","Dermis of the skin","Vocal cords"],a:2,c:"connective"},
+  {q:"What is the name of the embryonic stem cell tissue from which all adult connective tissues develop?",o:["Mesenchyme","Endoderm","Ectoderm","Pseudostratified"],a:0,c:"connective"},
+  {q:"Which protein fiber type found in connective tissue is thick, strong, flexible, and provides high tensile strength (resistance to stretching)?",o:["Elastic fibers","Reticular fibers","Collagen fibers","Fibrin fibers"],a:2,c:"connective"},
+  {q:"Which loose connective tissue forms a supportive, mesh-like framework for soft organs like the spleen, liver, and lymph nodes?",o:["Areolar tissue","Adipose tissue","Reticular tissue","Mesenchyme"],a:2,c:"connective"},
+  {q:"In histology, viewing a muscle \"with the grain\" refers to a longitudinal section. Viewing it \"against the grain\" (cutting across the fibers) is known as a:",o:["Sagittal section","Transverse (cross) section","Coronal section","Parasagittal section"],a:1,c:"basics"},
+  {q:"Which type of glial cell in the Central Nervous System (CNS) is responsible for producing the myelin sheath that wraps around multiple axons?",o:["Schwann cell","Astrocyte","Oligodendrocyte","Microglia"],a:2,c:"nervous"},
+  {q:"Which glial cell provides myelin insulation for a single axon segment in the Peripheral Nervous System (PNS)?",o:["Schwann cell","Oligodendrocyte","Satellite cell","Ependymal cell"],a:0,c:"nervous"},
+  {q:"Which star-shaped glial cell in the CNS supports neurons by maintaining the extracellular environment and regulating the blood-brain barrier?",o:["Microglia","Astrocyte","Ependymal cell","Schwann cell"],a:1,c:"nervous"},
+  {q:"The resident macrophage-like glial cells in the CNS that clear cellular debris and protect against pathogens are the:",o:["Oligodendrocytes","Astrocytes","Satellite cells","Microglia"],a:3,c:"nervous"},
+  {q:"Which ciliated glial cells line the ventricles of the brain and filter blood to produce cerebrospinal fluid (CSF)?",o:["Ependymal cells","Microglia","Astrocytes","Schwann cells"],a:0,c:"nervous"},
+  {q:"The small gaps in the myelin sheath along an axon that allow electrical signals to \"jump\" and travel faster (saltatory conduction) are called:",o:["Synaptic clefts","Nodes of Ranvier","Axon hillocks","Intercalated discs"],a:1,c:"nervous"},
+  {q:"Which type of membrane consists solely of connective tissue and lines the cavities of freely movable joints like the knee and shoulder?",o:["Serous membrane","Mucous membrane","Synovial membrane","Cutaneous membrane"],a:2,c:"membranes"},
+  {q:"Which epithelial membrane lines body cavities and hollow passageways that open directly to the exterior, such as the digestive and respiratory tracts?",o:["Mucous membrane","Serous membrane","Synovial membrane","Cutaneous membrane"],a:0,c:"membranes"},
+  {q:"Which type of epithelial membrane lines the closed coelomic cavities (e.g., pericardium and pleura) to reduce friction between organs?",o:["Mucous membrane","Cutaneous membrane","Synovial membrane","Serous membrane"],a:3,c:"membranes"},
+  {q:"The cutaneous membrane, which consists of keratinized stratified squamous epithelium resting on connective tissue, is more commonly known as the:",o:["Lining of the lungs","Skin","Peritoneum","Joint capsule"],a:1,c:"membranes"},
+  {q:"The integumentary system is composed of two main layers. The superficial, avascular layer is the:",o:["Dermis","Epidermis","Hypodermis","Subcutaneous layer"],a:1,c:"skin"},
+  {q:"What specific type of tissue primarily makes up the epidermis of the skin?",o:["Simple squamous epithelium","Dense irregular connective tissue","Keratinized stratified squamous epithelium","Pseudostratified columnar epithelium"],a:2,c:"skin"},
+  {q:"What is the deepest layer of the epidermis, where actively dividing stem cells (basal cells) are located?",o:["Stratum corneum","Stratum granulosum","Stratum lucidum","Stratum basale"],a:3,c:"skin"},
+  {q:"Which specialized cell in the stratum basale produces the pigment that gives skin its color and protects cellular DNA from UV damage?",o:["Keratinocyte","Melanocyte","Langerhans cell","Merkel cell"],a:1,c:"skin"},
+  {q:"What fibrous protein is produced by the majority of epidermal cells to make the skin tough, durable, and water-resistant?",o:["Collagen","Elastin","Keratin","Melanin"],a:2,c:"skin"},
+  {q:"The layer of the epidermis that is smooth, translucent, and only found in \"thick skin\" (like the palms of hands and soles of feet) is the:",o:["Stratum lucidum","Stratum corneum","Stratum spinosum","Stratum basale"],a:0,c:"skin"},
+  {q:"Which most superficial layer of the epidermis consists of 15 to 30 layers of dead, flat, keratin-filled cells that are periodically shed?",o:["Stratum granulosum","Stratum basale","Stratum corneum","Stratum spinosum"],a:2,c:"skin"},
+  {q:"Which dendritic cell in the epidermis functions as a macrophage to engulf bacteria and foreign particles?",o:["Merkel cell","Langerhans cell","Melanocyte","Fibroblast"],a:1,c:"skin"},
+  {q:"Which epidermal cell functions as a sensory receptor for touch and is especially abundant on the hands and feet?",o:["Merkel cell","Langerhans cell","Basal cell","Chondrocyte"],a:0,c:"skin"},
+  {q:"The dermis is composed of two layers. The superficial layer that interdigitates with the epidermis to form fingerprints is the:",o:["Reticular layer","Papillary layer","Hypodermis","Stratum basale"],a:1,c:"skin"},
+  {q:"The deeper, thicker layer of the dermis that provides the skin's mechanical strength and is composed of dense irregular connective tissue is the:",o:["Reticular layer","Papillary layer","Stratum spinosum","Endoderm"],a:0,c:"skin"},
+  {q:"The hypodermis (subcutaneous layer) is located below the dermis and primarily serves to store energy and insulate the body. It consists mostly of which type of tissue?",o:["Areolar and adipose tissue","Dense regular connective tissue","Stratified squamous epithelium","Cartilage"],a:0,c:"skin"},
+  {q:"Eccrine sweat glands, which are found all over the body, are primarily responsible for:",o:["Secreting sebum to waterproof hair","Releasing pheromones","Thermoregulation by producing hypotonic sweat","Forming the acid mantle of the stomach"],a:2,c:"skin"},
+  {q:"Which type of gland secretes an oily lipid mixture called sebum to lubricate and waterproof the skin and hair?",o:["Eccrine gland","Apocrine gland","Sebaceous gland","Endocrine gland"],a:2,c:"skin"},
+  {q:"Sebaceous glands release their contents through the complete rupture and destruction of the entire gland cell. This is classified as what type of secretion?",o:["Merocrine","Holocrine","Apocrine","Endocrine"],a:1,c:"skin"},
+  {q:"Exposure of the skin to UV light stimulates the production of which essential compound, vital for calcium absorption and bone health?",o:["Vitamin C","Vitamin D (Cholecalciferol)","Folic acid","Carotene"],a:1,c:"skin"},
+  {q:"The single cell formed by the fusion of a sperm and an egg is called a:",o:["Blastomere","Zygote","Morula","Blastocyst"],a:1,c:"embryo"},
+  {q:"During early embryonic development, the zygote undergoes rapid mitotic cell divisions without increasing in total volume. The resulting tightly packed sphere of cells is called the:",o:["Morula","Trophoblast","Endoderm","Gastrula"],a:0,c:"embryo"},
+  {q:"The very first embryonic cells have the ability to differentiate into ANY cell type in the human body, a property known as:",o:["Multipotency","Pluripotency","Totipotency","Unipotency"],a:2,c:"embryo"},
+  {q:"The developmental process by which the two-layered embryonic disc transitions into a three-layered disc is called:",o:["Cleavage","Implantation","Neurulation","Gastrulation"],a:3,c:"embryo"},
+  {q:"What are the three primary germ layers that give rise to all tissues and organs in the body?",o:["Ectoderm, Mesoderm, Endoderm","Epidermis, Dermis, Hypodermis","Epiblast, Hypoblast, Trophoblast","Amnion, Chorion, Yolk sac"],a:0,c:"embryo"},
+  {q:"Which primary germ layer gives rise to the epithelial lining of the digestive and respiratory tracts, as well as the liver and pancreas?",o:["Ectoderm","Mesoderm","Endoderm","Mesenchyme"],a:2,c:"embryo"},
+  {q:"Connective tissue proper, muscle tissue, bone, cartilage, and blood all primarily derive from which germ layer?",o:["Ectoderm","Mesoderm","Endoderm","Neuroectoderm"],a:1,c:"embryo"},
+  {q:"The epidermis of the skin and the entire nervous system (brain, spinal cord, nerves) arise from which primary germ layer?",o:["Ectoderm","Mesoderm","Endoderm","Mesenchyme"],a:0,c:"embryo"},
+  {q:"All adult connective tissues ultimately derive from which embryonic stem cell tissue?",o:["Trophoblast","Mesenchyme","Ectoderm","Endoderm"],a:1,c:"embryo"},
+  {q:"Which of the following is NOT one of the four classical cardinal signs of inflammation?",o:["Redness","Swelling (Edema)","Pain","Cyanosis (Blueness)"],a:3,c:"inflammation"},
+  {q:"During tissue injury, mast cells release a potent chemical mediator that causes local vasodilation and increased capillary permeability. This chemical is:",o:["Keratin","Histamine","Melanin","Acetylcholine"],a:1,c:"inflammation"},
+  {q:"Which type of burn destroys the epidermis and a portion of the dermis, resulting in painful swelling and blistering?",o:["First-degree burn","Second-degree burn","Third-degree burn","Fourth-degree burn"],a:1,c:"inflammation"},
+  {q:"The irreversible, age-related loss of muscle mass and function is referred to as:",o:["Hypertrophy","Sarcopenia","Hyperplasia","Osteoporosis"],a:1,c:"inflammation"},
+  {q:"In tissue repair, the process of replacing damaged functional cells with fibrous scar tissue (which restores structural integrity but not function) is known as:",o:["Regeneration","Apoptosis","Fibrosis","Necrosis"],a:2,c:"inflammation"}
+];
+
+const letters = ['A','B','C','D'];
+let answered = {};
+let selections = {};
+let correctTotal = 0;
+let currentFilter = 'all';
+
+function escapeHtml(s) {
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function renderQuestions(filter = 'all') {
+  currentFilter = filter;
+  const banner = document.getElementById('reviewBanner');
+  banner.classList.toggle('show', filter === 'wrong' && Object.values(answered).includes('wrong'));
+
+  const container = document.getElementById('questionsContainer');
+  container.innerHTML = '';
+
+  let shown = 0;
+  questions.forEach((q, i) => {
+    const num = i + 1;
+    if (filter === 'unanswered' && answered[i] !== undefined) return;
+    if (filter === 'wrong' && answered[i] !== 'wrong') return;
+    shown++;
+
+    const card = document.createElement('div');
+    card.className = 'question-card';
+    card.id = 'q' + i;
+    if (answered[i] === 'correct') card.classList.add('answered-correct');
+    if (answered[i] === 'wrong') card.classList.add('answered-wrong');
+
+    const optionsHtml = q.o.map((opt, oi) => {
+      let cls = 'option';
+      if (answered[i] !== undefined) {
+        cls += ' disabled';
+        if (oi === q.a) cls += ' correct';
+        if (answered[i] === 'wrong' && oi === selections[i]) cls += ' wrong';
+      }
+      return `<div class="${cls}" onclick="selectAnswer(${i}, ${oi})">
+        <div class="letter">${letters[oi]}</div>
+        <div>${escapeHtml(opt)}</div>
+      </div>`;
+    }).join('');
+
+    card.innerHTML = `
+      <div class="q-number">Question ${num}</div>
+      <div class="q-cat">${escapeHtml(CATEGORIES[q.c])}</div>
+      <div class="q-text">${escapeHtml(q.q)}</div>
+      <div class="options">${optionsHtml}</div>
+    `;
+    container.appendChild(card);
+  });
+
+  if (shown === 0) {
+    const msg = filter === 'wrong'
+      ? `<div class="empty-state"><h3>Nothing to review!</h3><p>You haven't missed any questions yet — or you've already reviewed them all.</p></div>`
+      : filter === 'unanswered'
+        ? `<div class="empty-state"><h3>All done!</h3><p>You've answered every question.</p></div>`
+        : `<div class="empty-state"><p>No questions to show.</p></div>`;
+    container.innerHTML = msg;
+  }
+}
+
+function selectAnswer(qi, oi) {
+  if (answered[qi] !== undefined) return;
+  const q = questions[qi];
+  const isCorrect = oi === q.a;
+
+  answered[qi] = isCorrect ? 'correct' : 'wrong';
+  selections[qi] = oi;
+  if (isCorrect) correctTotal++;
+
+  const card = document.getElementById('q' + qi);
+  card.classList.add(isCorrect ? 'answered-correct' : 'answered-wrong');
+
+  const options = card.querySelectorAll('.option');
+  options.forEach((opt, idx) => {
+    opt.classList.add('disabled');
+    if (idx === q.a) opt.classList.add('correct');
+    if (!isCorrect && idx === oi) opt.classList.add('wrong');
+  });
+
+  updateStats();
+}
+
+function updateStats() {
+  const count = Object.keys(answered).length;
+  document.getElementById('answeredCount').textContent = count;
+  document.getElementById('correctCount').textContent = correctTotal;
+  document.getElementById('scorePercent').textContent = count > 0 ? Math.round((correctTotal / count) * 100) + '%' : '0%';
+  document.getElementById('progressFill').style.width = (count / questions.length * 100) + '%';
+}
+
+function categoryBreakdown() {
+  const buckets = {};
+  Object.keys(CATEGORIES).forEach(k => buckets[k] = { total: 0, correct: 0, answered: 0 });
+  questions.forEach((q, i) => {
+    buckets[q.c].total++;
+    if (answered[i] !== undefined) {
+      buckets[q.c].answered++;
+      if (answered[i] === 'correct') buckets[q.c].correct++;
+    }
+  });
+  return buckets;
+}
+
+function submitTest() {
+  const count = Object.keys(answered).length;
+  const totalQ = questions.length;
+  const pctOfTotal = Math.round((correctTotal / totalQ) * 100);
+  const panel = document.getElementById('resultsPanel');
+  const circle = document.getElementById('scoreCircle');
+  const text = document.getElementById('resultsText');
+  const sub = document.getElementById('resultsSub');
+
+  circle.textContent = pctOfTotal + '%';
+  circle.className = 'score-circle ' + (pctOfTotal >= 80 ? 'great' : pctOfTotal >= 60 ? 'ok' : 'low');
+  text.textContent = `You got ${correctTotal} out of ${totalQ} correct.`;
+  sub.textContent = count < totalQ
+    ? `(${totalQ - count} unanswered — those count as incorrect.)`
+    : `All ${totalQ} questions answered. Nice work!`;
+
+  // Build category breakdown
+  const buckets = categoryBreakdown();
+  const catList = document.getElementById('catList');
+  catList.innerHTML = '';
+
+  const weakAreas = [];
+  const solidAreas = [];
+
+  Object.keys(CATEGORIES).forEach(key => {
+    const b = buckets[key];
+    if (b.total === 0) return;
+    const pct = Math.round((b.correct / b.total) * 100);
+    let cls = '';
+    if (pct < 70) { cls = 'weak'; weakAreas.push(CATEGORIES[key]); }
+    else if (pct >= 90) { cls = 'solid'; solidAreas.push(CATEGORIES[key]); }
+
+    const row = document.createElement('div');
+    row.className = 'cat-row ' + cls;
+    row.innerHTML = `
+      <div>
+        <div class="cat-name">${CATEGORIES[key]}</div>
+        <div class="cat-bar-wrap"><div class="cat-bar ${cls}" style="width:${pct}%"></div></div>
+      </div>
+      <div class="cat-score"><b>${b.correct}/${b.total}</b> · ${pct}%</div>
+    `;
+    catList.appendChild(row);
+  });
+
+  const tip = document.getElementById('studyTip');
+  if (weakAreas.length === 0) {
+    tip.style.display = 'none';
+  } else {
+    tip.style.display = 'block';
+    tip.innerHTML = `<b>Study harder on:</b> ${weakAreas.map(escapeHtml).join(' · ')}<br>` +
+      `<span style="color:var(--text2);font-size:0.85rem;">(Categories where you scored under 70%.)</span>`;
+  }
+
+  // Review prompt — always reset button state first, then conditionally override
+  const missed = Object.values(answered).filter(v => v === 'wrong').length;
+  const unansweredCount = totalQ - count;
+  const reviewBtn = document.getElementById('reviewBtn');
+  const promptText = document.getElementById('reviewPromptText');
+
+  reviewBtn.textContent = 'Yes, review missed questions';
+  reviewBtn.onclick = startReview;
+
+  if (missed === 0 && unansweredCount === 0) {
+    promptText.textContent = 'Perfect score! Nothing to review.';
+    reviewBtn.style.display = 'none';
+  } else {
+    reviewBtn.style.display = 'inline-block';
+    if (missed > 0 && unansweredCount > 0) {
+      promptText.textContent = `You missed ${missed} and skipped ${unansweredCount}. Want to go through the ones you missed again?`;
+    } else if (missed > 0) {
+      promptText.textContent = `You missed ${missed} question${missed === 1 ? '' : 's'}. Want to go through them again?`;
+    } else {
+      promptText.textContent = `You skipped ${unansweredCount} question${unansweredCount === 1 ? '' : 's'}. Want to answer them now?`;
+      reviewBtn.textContent = 'Yes, answer skipped questions';
+      reviewBtn.onclick = () => { closeResults(); filterQuestions('unanswered', document.querySelector('.filter-btn[data-filter="unanswered"]')); };
+    }
+  }
+
+  panel.classList.add('show');
+  panel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function startReview() {
+  // Clear missed answers so user can retry them, then filter to those questions only
+  const missedIndexes = Object.keys(answered).filter(k => answered[k] === 'wrong').map(Number);
+  missedIndexes.forEach(i => {
+    delete answered[i];
+    delete selections[i];
+  });
+  // Recompute correct count (unchanged actually, but kept for clarity)
+  correctTotal = Object.values(answered).filter(v => v === 'correct').length;
+  updateStats();
+
+  // Hide results, show only the missed questions as unanswered
+  document.getElementById('resultsPanel').classList.remove('show');
+  // Mark these specific indexes for review-only display
+  reviewSet = new Set(missedIndexes);
+  filterQuestions('reviewSet', document.querySelector('.filter-btn[data-filter="wrong"]'));
+}
+
+let reviewSet = null;
+
+// Override renderQuestions to support 'reviewSet' filter
+const _origRender = renderQuestions;
+renderQuestions = function(filter = 'all') {
+  if (filter === 'reviewSet' && reviewSet) {
+    currentFilter = 'reviewSet';
+    const banner = document.getElementById('reviewBanner');
+    banner.classList.add('show');
+    const container = document.getElementById('questionsContainer');
+    container.innerHTML = '';
+    let shown = 0;
+    questions.forEach((q, i) => {
+      if (!reviewSet.has(i)) return;
+      shown++;
+      const card = document.createElement('div');
+      card.className = 'question-card';
+      card.id = 'q' + i;
+      if (answered[i] === 'correct') card.classList.add('answered-correct');
+      if (answered[i] === 'wrong') card.classList.add('answered-wrong');
+
+      const optionsHtml = q.o.map((opt, oi) => {
+        let cls = 'option';
+        if (answered[i] !== undefined) {
+          cls += ' disabled';
+          if (oi === q.a) cls += ' correct';
+          if (answered[i] === 'wrong' && oi === selections[i]) cls += ' wrong';
+        }
+        return `<div class="${cls}" onclick="selectAnswer(${i}, ${oi})">
+          <div class="letter">${letters[oi]}</div>
+          <div>${escapeHtml(opt)}</div>
+        </div>`;
+      }).join('');
+
+      card.innerHTML = `
+        <div class="q-number">Question ${i + 1} · Retry</div>
+        <div class="q-cat">${escapeHtml(CATEGORIES[q.c])}</div>
+        <div class="q-text">${escapeHtml(q.q)}</div>
+        <div class="options">${optionsHtml}</div>
+      `;
+      container.appendChild(card);
+    });
+    if (shown === 0) {
+      container.innerHTML = `<div class="empty-state"><h3>Nothing to review!</h3></div>`;
+    }
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    return;
+  }
+  reviewSet = null;
+  _origRender(filter);
+};
+
+function closeResults() {
+  document.getElementById('resultsPanel').classList.remove('show');
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function resetTest() {
+  if (Object.keys(answered).length > 0 && !confirm('Reset the entire test? Your progress will be lost.')) return;
+  answered = {};
+  selections = {};
+  correctTotal = 0;
+  reviewSet = null;
+  updateStats();
+  document.getElementById('resultsPanel').classList.remove('show');
+  document.getElementById('reviewBanner').classList.remove('show');
+  // Restore review button (in case it was swapped to "answer skipped")
+  const reviewBtn = document.getElementById('reviewBtn');
+  reviewBtn.textContent = 'Yes, review missed questions';
+  reviewBtn.onclick = startReview;
+  reviewBtn.style.display = 'inline-block';
+  renderQuestions('all');
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  document.querySelector('.filter-btn[data-filter="all"]').classList.add('active');
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function filterQuestions(filter, btn) {
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+  renderQuestions(filter);
+}
+
+document.addEventListener('DOMContentLoaded', function() { renderQuestions(); });
+</script>
+</body>
+</html>
