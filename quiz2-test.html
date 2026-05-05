@@ -269,6 +269,34 @@
     color: var(--text2);
   }
   .empty-state h3 { color: var(--correct); margin-bottom: 0.5rem; }
+  .mode-picker {
+    display: flex;
+    justify-content: center;
+    gap: 0.5rem;
+    margin: 1.25rem 0 0.25rem;
+    flex-wrap: wrap;
+  }
+  .mode-btn {
+    background: var(--card);
+    color: var(--text);
+    border: 2px solid var(--border);
+    padding: 0.6rem 1.25rem;
+    border-radius: 24px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    font-weight: 600;
+    transition: all 0.2s;
+  }
+  .mode-btn:hover { border-color: var(--accent); transform: translateY(-1px); }
+  .mode-btn.active {
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    border-color: var(--accent2);
+    color: #fff;
+  }
+  .mode-btn.hard.active { background: linear-gradient(135deg, var(--warn), #ff6d00); border-color: var(--warn); color: #1a1a1a; }
+  .mode-btn.superhard.active { background: linear-gradient(135deg, var(--wrong), #d500f9); border-color: var(--wrong); color: #fff; }
+  .mode-label { color: var(--text2); font-size: 0.82rem; text-align: center; margin-bottom: 0.5rem; }
+  .mode-label b { color: var(--accent2); }
   @media (max-width: 600px) {
     .header h1 { font-size: 1.3rem; }
     .header .stats { gap: 1rem; font-size: 0.8rem; }
@@ -283,7 +311,7 @@
   <h1>Quiz 2 Prep — Weeks 4 & 5</h1>
   <div class="subtitle">Tissues · Membranes · Integumentary · Embryonic Development</div>
   <div class="stats">
-    <div>Answered: <span id="answeredCount">0</span>/100</div>
+    <div>Answered: <span id="answeredCount">0</span>/<span id="totalCount">100</span></div>
     <div>Correct: <span id="correctCount">0</span></div>
     <div>Score: <span id="scorePercent">0%</span></div>
   </div>
@@ -291,6 +319,13 @@
 </div>
 
 <div class="container">
+  <div class="mode-picker">
+    <button class="mode-btn normal active" data-mode="normal" onclick="setMode('normal', this)">Normal</button>
+    <button class="mode-btn hard" data-mode="hard" onclick="setMode('hard', this)">Hard</button>
+    <button class="mode-btn superhard" data-mode="superhard" onclick="setMode('superhard', this)">Super Hard</button>
+  </div>
+  <div class="mode-label" id="modeLabel"><b>Normal</b> — 100 questions · standard recall &amp; definitions</div>
+
   <div class="controls">
     <button class="filter-btn active" data-filter="all" onclick="filterQuestions('all', this)">All</button>
     <button class="filter-btn" data-filter="unanswered" onclick="filterQuestions('unanswered', this)">Unanswered</button>
@@ -337,7 +372,7 @@ const CATEGORIES = {
   inflammation: "Inflammation & Tissue Repair"
 };
 
-const questions = [
+const NORMAL_QUESTIONS = [
   {q:"What are the four primary tissue types in the human body?",o:["Epidermis, Dermis, Hypodermis, Fascia","Epithelial, Connective, Muscle, Nervous","Squamous, Cuboidal, Columnar, Transitional","Blood, Bone, Cartilage, Adipose"],a:1,c:"basics"},
   {q:"The microscopic study of tissue appearance, organization, and function is called:",o:["Cytology","Pathology","Embryology","Histology"],a:3,c:"basics"},
   {q:"At which level of structural organization do two or more different tissues combine to form a working unit?",o:["Cellular level","Organ level","Organ system level","Chemical level"],a:1,c:"basics"},
@@ -439,6 +474,81 @@ const questions = [
   {q:"The irreversible, age-related loss of muscle mass and function is referred to as:",o:["Hypertrophy","Sarcopenia","Hyperplasia","Osteoporosis"],a:1,c:"inflammation"},
   {q:"In tissue repair, the process of replacing damaged functional cells with fibrous scar tissue (which restores structural integrity but not function) is known as:",o:["Regeneration","Apoptosis","Fibrosis","Necrosis"],a:2,c:"inflammation"}
 ];
+
+const HARD_QUESTIONS = [
+  {q:"In histology, when a tissue section is cut perpendicular to the long axis of its cells (i.e., across them), this view is called a:",o:["Longitudinal section","Transverse (cross) section","Coronal section","Tangential section"],a:1,c:"basics"},
+  {q:"During the second week of development, the inner cell mass differentiates into a two-layered embryonic disc consisting of:",o:["Ectoderm and endoderm","Trophoblast and inner cell mass","Epiblast and hypoblast","Mesoderm and chorion"],a:2,c:"embryo"},
+  {q:"In merocrine secretion, the secretory product is released:",o:["By exocytosis through vesicles, leaving the cell intact","By pinching off the apical portion of the cell","By complete rupture and disintegration of the cell","Directly into the bloodstream via fenestrations"],a:0,c:"epithelial"},
+  {q:"In apocrine secretion (as defined in the textbook), the released material includes:",o:["Only vesicle contents released by exocytosis","The apical portion of the cell along with the secretory product","The entire cell, which becomes part of the secretion","Hormone molecules secreted through tight junctions"],a:1,c:"epithelial"},
+  {q:"Pseudostratified ciliated columnar epithelium with goblet cells is most characteristically found:",o:["In the urinary bladder","Lining the trachea and upper respiratory tract","Lining blood vessels","On the surface of the skin"],a:1,c:"epithelial"},
+  {q:"Transitional epithelium is uniquely structured to allow stretching, and is found in the:",o:["Trachea and bronchi","Esophagus and oral cavity","Urinary bladder, ureters, and part of the urethra","Pleura and pericardium"],a:2,c:"epithelial"},
+  {q:"Reticular fibers in connective tissue are composed primarily of which type of collagen?",o:["Type I","Type II","Type III","Type IV"],a:2,c:"connective"},
+  {q:"Type II collagen is the principal collagen of which tissue?",o:["Tendons and ligaments","Skin and bone matrix","Hyaline cartilage","Basement membranes"],a:2,c:"connective"},
+  {q:"A \"signet-ring\" appearance under the microscope (nucleus pushed to the cell periphery by a single large lipid droplet) is characteristic of:",o:["Fibroblasts","Adipocytes (white adipose)","Reticular cells","Mast cells"],a:1,c:"connective"},
+  {q:"Which connective tissue cell is derived from a B-lymphocyte and secretes antibodies?",o:["Macrophage","Mast cell","Plasma cell","Fibroblast"],a:2,c:"connective"},
+  {q:"Hyaline cartilage is found in all of the following EXCEPT:",o:["Articular surfaces of joints","Costal cartilages connecting ribs to the sternum","Tracheal rings","Intervertebral discs"],a:3,c:"connective"},
+  {q:"Fibrocartilage is the most appropriate cartilage type for which structures?",o:["External ear (auricle)","Epiglottis","Intervertebral discs and the pubic symphysis","Tracheal rings"],a:2,c:"connective"},
+  {q:"Elastic cartilage is found in:",o:["The articular cartilage of the knee","The external ear (auricle) and the epiglottis","Tendons and ligaments","The pubic symphysis"],a:1,c:"connective"},
+  {q:"In compact bone, osteocytes communicate with each other and receive nutrients via cytoplasmic processes that pass through tiny channels called:",o:["Lacunae","Lamellae","Canaliculi","Osteons"],a:2,c:"connective"},
+  {q:"A single Haversian (osteon) system in compact bone is organized around a central canal that contains:",o:["Red bone marrow","Blood vessels and nerves","Synovial fluid","Yellow bone marrow"],a:1,c:"connective"},
+  {q:"Intercalated discs in cardiac muscle contain BOTH:",o:["T tubules and sarcomeres","Anchoring (desmosomal) junctions and gap junctions","Tight junctions and chemical synapses","Hemidesmosomes and basement membranes"],a:1,c:"muscle"},
+  {q:"In skeletal muscle, the muscle cells (myocytes) develop from precursor cells (derived from mesoderm) called:",o:["Chondroblasts","Osteoblasts","Myoblasts","Fibroblasts"],a:2,c:"muscle"},
+  {q:"A defining feature of smooth muscle (compared to skeletal and cardiac) is that smooth muscle:",o:["Has prominent striations","Has cells that are mononucleated, fusiform, and lack striations","Possesses intercalated discs","Is multinucleated with peripheral nuclei"],a:1,c:"muscle"},
+  {q:"Which neuroglial cell type in the CNS forms myelin and can wrap around segments of MULTIPLE axons simultaneously?",o:["Schwann cells","Oligodendrocytes","Astrocytes","Microglia"],a:1,c:"nervous"},
+  {q:"Which neuroglial cell type acts as the resident \"macrophage\" of the central nervous system?",o:["Astrocytes","Ependymal cells","Microglia","Satellite cells"],a:2,c:"nervous"},
+  {q:"Saltatory conduction along a myelinated axon means action potentials \"jump\" between which structures?",o:["Synaptic clefts","Nodes of Ranvier","Axon hillocks","Terminal boutons"],a:1,c:"nervous"},
+  {q:"Which statement about the visceral and parietal pleurae is correct?",o:["Visceral covers the heart; parietal lines the abdomen","Visceral covers the lung; parietal lines the thoracic wall","Visceral covers the abdominal organs; parietal lines the pelvis","Both visceral and parietal cover the lung"],a:1,c:"membranes"},
+  {q:"The dermal papillae of the papillary layer interlock with the epidermis, forming the patterns we recognize as:",o:["Pacinian corpuscles","Sweat pores","Fingerprints","Lanugo"],a:2,c:"skin"},
+  {q:"Which layer of the dermis is composed of dense IRREGULAR connective tissue and gives the skin most of its mechanical strength?",o:["Papillary layer","Reticular layer","Stratum lucidum","Hypodermis"],a:1,c:"skin"},
+  {q:"In the epidermis, the layer where keratinocytes accumulate keratohyalin and lamellar granules in preparation for keratinization is the:",o:["Stratum basale","Stratum spinosum","Stratum granulosum","Stratum corneum"],a:2,c:"skin"},
+  {q:"Arrector pili muscles attached to hair follicles contract under control of which division of the autonomic nervous system?",o:["Parasympathetic","Sympathetic","Somatic","Enteric"],a:1,c:"skin"},
+  {q:"Vitamin D synthesis begins when UV radiation in the skin converts 7-dehydrocholesterol into cholecalciferol. The fully active form of vitamin D — calcitriol — is produced by the:",o:["Skin","Liver","Kidneys","Adrenal glands"],a:2,c:"skin"},
+  {q:"Apocrine sweat glands differ from eccrine (merocrine) sweat glands in all of the following ways EXCEPT:",o:["Apocrine glands are larger and lie deeper in the dermis","Apocrine glands are typically associated with hair follicles in the axillae and genital regions","Apocrine secretions contain proteins and lipids that bacteria can break down to produce odor","Apocrine glands are the primary source of thermoregulatory sweat"],a:3,c:"skin"},
+  {q:"In the textbook's description of wound healing, the new vascularized tissue formed by fibroblast division and angiogenesis is called:",o:["Scar tissue","Granulation tissue","Necrotic tissue","Mesenchyme"],a:1,c:"inflammation"},
+  {q:"Bedsores (decubitus ulcers) result primarily from:",o:["Allergic reactions to bedding","Bacterial infection of healthy skin","Constant pressure that reduces blood flow, leading to ischemia and tissue necrosis","UV exposure"],a:2,c:"inflammation"}
+];
+
+const SUPERHARD_QUESTIONS = [
+  {q:"Of the three primary germ layers, which gives rise to BOTH the epidermis of the skin AND the entire nervous system?",o:["Mesoderm","Endoderm","Ectoderm","Mesenchyme"],a:2,c:"embryo"},
+  {q:"The epithelial lining of the digestive and respiratory tracts (excluding the oral cavity and anal canal), the liver, and the pancreas all derive from which germ layer?",o:["Ectoderm","Mesoderm","Endoderm","Trophoblast"],a:2,c:"embryo"},
+  {q:"A patient with a genetic defect in fibrillin-1 (Marfan syndrome) would be expected to show abnormalities primarily affecting which extracellular matrix component?",o:["Type I collagen","Elastic fibers","Reticular fibers","Ground substance proteoglycans"],a:1,c:"connective"},
+  {q:"In scurvy (severe vitamin C deficiency), wound healing is impaired because vitamin C is required for the:",o:["Polymerization of fibrin during clotting","Hydroxylation of proline and lysine residues during collagen synthesis","Activation of macrophages","Cross-linking of elastic fibers"],a:1,c:"connective"},
+  {q:"Cartilage grows in two ways: by addition of new layers from the surrounding perichondrium (appositional growth) and by:",o:["Endochondral ossification","Mitotic division of chondrocytes within their lacunae (interstitial growth)","Migration of fibroblasts into the matrix","Hyperplasia of osteoblasts at the periosteum"],a:1,c:"connective"},
+  {q:"Why does cartilage heal slowly after injury compared to bone?",o:["Cartilage lacks lacunae for chondrocytes","Cartilage is avascular, so nutrients must diffuse through the matrix to reach chondrocytes","Cartilage has no extracellular matrix","Cartilage cannot undergo interstitial growth"],a:1,c:"connective"},
+  {q:"In compact bone, perforating (Volkmann) canals differ from central (Haversian) canals in that perforating canals:",o:["Run parallel to the long axis of the bone","Run perpendicular to the long axis, connecting central canals to the periosteum and to one another","Contain only nerves and never blood vessels","Are unique to spongy bone"],a:1,c:"connective"},
+  {q:"Brown adipose tissue, abundant in newborns, generates heat (non-shivering thermogenesis) because its adipocytes contain:",o:["A single large lipid droplet and few mitochondria","Many small lipid droplets and a high density of mitochondria with uncoupling protein","No lipid droplets at all","Granules of melanin"],a:1,c:"connective"},
+  {q:"In cardiac and single-unit smooth muscle, gap junctions allow groups of cells to contract together as a single coordinated unit — a property called:",o:["Innervation","A functional syncytium","Tetanus","Plasticity"],a:1,c:"muscle"},
+  {q:"Adult skeletal muscle responds to long-term overload mainly by enlarging existing fibers (hypertrophy) and rarely adds new fibers (hyperplasia). Smooth muscle, by contrast, CAN add new cells. This is partly because smooth muscle cells:",o:["Are multinucleated","Retain the ability to divide","Possess T tubules","Use only fatty acids for fuel"],a:1,c:"muscle"},
+  {q:"A neuron with a single axon and a single dendrite — classically found in the retina and olfactory epithelium — is described as:",o:["Multipolar","Bipolar","Pseudounipolar (unipolar)","Anaxonic"],a:1,c:"nervous"},
+  {q:"Sensory neurons of the dorsal root ganglia, which have a single process that splits into a peripheral and a central branch, are classically:",o:["Multipolar","Bipolar","Pseudounipolar (unipolar)","Anaxonic"],a:2,c:"nervous"},
+  {q:"Schwann cells in the PNS perform a function analogous to which CNS glial cell — but with the key difference that one Schwann cell myelinates only ONE segment of ONE axon?",o:["Astrocytes","Oligodendrocytes","Microglia","Ependymal cells"],a:1,c:"nervous"},
+  {q:"In the PNS, the supportive glial cells surrounding neuron cell bodies in ganglia (analogous to astrocytes in the CNS) are called:",o:["Schwann cells","Satellite cells","Microglia","Oligodendrocytes"],a:1,c:"nervous"},
+  {q:"A cell that produces hyaluronan inside the cavity of a freely movable joint is most likely a:",o:["Chondrocyte in the articular cartilage","Fibroblast in the synovial membrane","Goblet cell in a mucous membrane","Mesothelial cell of the pleura"],a:1,c:"membranes"},
+  {q:"The mesothelium of a serous membrane is derived embryologically from which germ layer?",o:["Ectoderm","Mesoderm","Endoderm","Neural crest"],a:1,c:"membranes"},
+  {q:"Albinism, a genetic disorder, is best characterized as:",o:["Autoimmune destruction of melanocytes in patches","An inability to produce melanin despite the presence of melanocytes","Excessive keratinization of the stratum corneum","A defect in collagen crosslinking in the dermis"],a:1,c:"skin"},
+  {q:"Vitiligo differs from albinism in that vitiligo involves:",o:["A genetic defect present from birth in every melanocyte","An inability to make melanin in any melanocyte at all","Loss or dysfunction of melanocytes in localized patches of skin","Excessive deposition of carotene in the stratum corneum"],a:2,c:"skin"},
+  {q:"The stratum lucidum, found only in thick skin (palms, soles), lies BETWEEN which two layers?",o:["Stratum basale and stratum spinosum","Stratum spinosum and stratum granulosum","Stratum granulosum and stratum corneum","Stratum corneum and the outside environment"],a:2,c:"skin"},
+  {q:"As keratinocytes migrate from the stratum basale toward the surface, they:",o:["Acquire more organelles and become more metabolically active","Progressively lose organelles, accumulate keratin, and die by the time they reach the stratum corneum","Continue dividing actively in every layer they pass through","Begin secreting collagen into the dermis"],a:1,c:"skin"},
+  {q:"A patient presents with a brown skin lesion that is asymmetric, has irregular borders, contains multiple colors, is 8 mm across, and is changing in shape. By the ABCDE rule, this presentation is highly suspicious for:",o:["Basal cell carcinoma","Squamous cell carcinoma","Melanoma","Vitiligo"],a:2,c:"skin"},
+  {q:"Sebaceous glands secrete sebum onto the skin surface. Their mode of secretion is:",o:["Merocrine — vesicles released, cell intact","Apocrine — apical pinching of the cell","Holocrine — the entire gland cell ruptures and becomes part of the secretion","Endocrine — directly into the bloodstream"],a:2,c:"skin"},
+  {q:"Touch receptors in the papillary layer of the dermis that respond to LIGHT touch are:",o:["Pacinian (lamellated) corpuscles","Meissner corpuscles (tactile corpuscles)","Ruffini endings","Free nerve endings only"],a:1,c:"skin"},
+  {q:"Pacinian (lamellated) corpuscles in the deeper dermis and hypodermis primarily detect:",o:["Light touch","Vibration and deep pressure","Temperature","Sharp pain"],a:1,c:"skin"},
+  {q:"In the textbook's description of vitamin D activation, cholecalciferol (made in the skin from 7-dehydrocholesterol upon UV exposure) is converted in the liver to:",o:["Calcitriol","Calcidiol (also called 25-hydroxyvitamin D)","Cholesterol","Cortisol"],a:1,c:"skin"},
+  {q:"A burn that destroys the epidermis and dermis, often appearing white or charred, and that is paradoxically less painful than a less severe burn because nerve endings have been destroyed, is classified as:",o:["First-degree","Second-degree","Third-degree","Sunburn"],a:2,c:"inflammation"},
+  {q:"Of the following, which is NOT considered one of the four classical cardinal signs of inflammation in standard textbooks (rubor, tumor, calor, dolor)?",o:["Calor (heat)","Rubor (redness)","Tumor (swelling)","Pruritus (itching)"],a:3,c:"inflammation"},
+  {q:"A keloid scar differs from a typical hypertrophic scar in that a keloid:",o:["Is smaller and lower than the surrounding skin","Is confined within the boundaries of the original wound","Extends beyond the boundaries of the original wound","Heals back to invisible normal-looking skin"],a:2,c:"inflammation"},
+  {q:"During the inflammatory phase of wound healing, white blood cells exit capillaries by squeezing between endothelial cells. This process is called:",o:["Phagocytosis","Diapedesis (extravasation)","Apoptosis","Pinocytosis"],a:1,c:"inflammation"},
+  {q:"Sarcopenia refers specifically to the age-related loss of:",o:["Bone mass and density","Skeletal muscle mass and function","Cartilage in joints","Pigmentation in hair"],a:1,c:"inflammation"}
+];
+
+const QUESTION_BANKS = {
+  normal:    { questions: NORMAL_QUESTIONS,    label: '<b>Normal</b> — 100 questions · standard recall &amp; definitions' },
+  hard:      { questions: HARD_QUESTIONS,      label: '<b>Hard</b> — nuanced distinctions &amp; textbook-specific phrasing' },
+  superhard: { questions: SUPERHARD_QUESTIONS, label: '<b>Super Hard</b> — clinical correlations, mechanisms &amp; multi-step reasoning' }
+};
+
+let currentMode = 'normal';
+let questions = QUESTION_BANKS[currentMode].questions;
 
 const letters = ['A','B','C','D'];
 let answered = {};
@@ -729,7 +839,62 @@ function filterQuestions(filter, btn) {
   renderQuestions(filter);
 }
 
-document.addEventListener('DOMContentLoaded', function() { renderQuestions(); });
+function setMode(mode, btn) {
+  if (!QUESTION_BANKS[mode]) return;
+  if (mode === currentMode) return;
+  const answeredAny = Object.keys(answered).length > 0;
+  if (answeredAny && !confirm('Switch difficulty? Your current progress will be cleared.')) return;
+
+  currentMode = mode;
+  questions = QUESTION_BANKS[mode].questions;
+  try { localStorage.setItem('quiz2_mode', mode); } catch(e) {}
+
+  // Reset answer state — different banks, different indices
+  answered = {};
+  selections = {};
+  correctTotal = 0;
+  reviewSet = null;
+
+  // Update UI: mode buttons, label, totals, filters, banner, results
+  document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
+  if (btn) {
+    btn.classList.add('active');
+  } else {
+    const target = document.querySelector('.mode-btn[data-mode="' + mode + '"]');
+    if (target) target.classList.add('active');
+  }
+  document.getElementById('modeLabel').innerHTML = QUESTION_BANKS[mode].label;
+  document.getElementById('totalCount').textContent = questions.length;
+
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  document.querySelector('.filter-btn[data-filter="all"]').classList.add('active');
+  document.getElementById('reviewBanner').classList.remove('show');
+  document.getElementById('resultsPanel').classList.remove('show');
+
+  const reviewBtn = document.getElementById('reviewBtn');
+  reviewBtn.textContent = 'Yes, review missed questions';
+  reviewBtn.onclick = startReview;
+  reviewBtn.style.display = 'inline-block';
+
+  updateStats();
+  renderQuestions('all');
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+  let saved = null;
+  try { saved = localStorage.getItem('quiz2_mode'); } catch(e) {}
+  if (saved && QUESTION_BANKS[saved] && saved !== 'normal') {
+    currentMode = saved;
+    questions = QUESTION_BANKS[saved].questions;
+    document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
+    const target = document.querySelector('.mode-btn[data-mode="' + saved + '"]');
+    if (target) target.classList.add('active');
+    document.getElementById('modeLabel').innerHTML = QUESTION_BANKS[saved].label;
+  }
+  document.getElementById('totalCount').textContent = questions.length;
+  renderQuestions();
+});
 </script>
 </body>
 </html>
