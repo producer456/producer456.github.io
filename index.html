@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>David's Study Apps</title>
+<style>
+  :root {
+    --bg: #0f1419; --panel: #1a2129; --panel-2: #222b35;
+    --ink: #e8edf2; --ink-dim: #8a98a6; --accent: #4da3ff; --radius: 14px;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    background: radial-gradient(1200px 600px at 50% -10%, #16202b 0%, var(--bg) 60%);
+    color: var(--ink); min-height: 100vh;
+    font: 16px/1.6 -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  }
+  .wrap { max-width: 1000px; margin: 0 auto; padding: 48px 20px 80px; }
+  header { margin-bottom: 28px; }
+  h1 { font-size: 32px; margin: 0 0 6px; letter-spacing: -0.02em; }
+  h1 span { color: var(--accent); }
+  .sub { color: var(--ink-dim); margin: 0; }
+  .filter {
+    width: 100%; margin: 24px 0 8px; padding: 12px 16px;
+    background: var(--panel); border: 1px solid var(--panel-2); border-radius: 10px;
+    color: var(--ink); font: inherit;
+  }
+  .filter:focus { outline: none; border-color: var(--accent); }
+  h2 {
+    font-size: 14px; text-transform: uppercase; letter-spacing: 0.07em;
+    color: var(--ink-dim); margin: 34px 0 12px;
+  }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 14px; }
+  .card {
+    display: block; text-decoration: none; color: var(--ink);
+    background: var(--panel); border: 1px solid var(--panel-2); border-radius: var(--radius);
+    padding: 18px; transition: border-color .15s, transform .15s;
+  }
+  .card:hover { border-color: var(--accent); transform: translateY(-2px); }
+  .card h3 { margin: 0 0 6px; font-size: 17px; display: flex; align-items: center; gap: 8px; }
+  .card p { margin: 0; color: var(--ink-dim); font-size: 14px; }
+  .card .go { color: var(--accent); font-size: 13px; margin-top: 12px; display: inline-block; }
+  .featured { background: linear-gradient(180deg, #1c2a38, var(--panel)); border-color: #2b5378; }
+  .empty { color: var(--ink-dim); padding: 20px 0; }
+  footer { margin-top: 48px; color: var(--ink-dim); font-size: 13px; }
+  footer a { color: var(--ink-dim); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>David's <span>Study Apps</span></h1>
+    <p class="sub">Anatomy &amp; physiology study tools, quizzes, and labeling apps — built for BIO&nbsp;40A and shared with the class.</p>
+    <input class="filter" id="filter" type="search" placeholder="Filter… (e.g. skeleton, tissues, quiz)" autocomplete="off">
+  </header>
+  <main id="groups"></main>
+  <footer>
+    Hosted on GitHub Pages · <a href="https://github.com/producer456" target="_blank" rel="noopener">github.com/producer456</a>
+  </footer>
+</div>
+<script>
+const SITES = [
+  { group: 'Featured', featured: true, icon: '⚡', title: 'Quiz Studio',
+    desc: 'The hub: every quiz in one place, plus offline Mac & Windows apps. Multiple-choice and image pin-ID, with a retake-what-you-missed loop.',
+    url: 'https://producer456.github.io/quiz-studio/' },
+
+  { group: 'Study companions', icon: '📖', title: 'BIO 40A Study Companion',
+    desc: 'Read-and-learn companion for the course.',
+    url: 'https://producer456.github.io/bio40a-web/' },
+  { group: 'Study companions', icon: '🔬', title: 'Chapter 4 — Tissues',
+    desc: 'Interactive Chapter 4 companion: read with retention checks, ID tissues from real slides, speed-match game.',
+    url: 'https://producer456.github.io/bio40a-ch4-web/' },
+  { group: 'Study companions', icon: '🩺', title: 'Disease Study Tool',
+    desc: 'Modular anatomical disease study charts, one per condition.',
+    url: 'https://producer456.github.io/40a/' },
+
+  { group: 'Quizzes & labeling', icon: '🧠', title: 'Lab Quiz — Cell, Skin & Mitosis',
+    desc: 'Interactive labeling app for cell, skin, and mitosis models.',
+    url: 'https://producer456.github.io/weekoneid/' },
+  { group: 'Quizzes & labeling', icon: '🦴', title: 'Axial Skeleton Quiz',
+    desc: 'Week 4 — skull, vertebrae, sternum labeling (teacher/student modes).',
+    url: 'https://producer456.github.io/bio40a-axial-skeleton/' },
+  { group: 'Quizzes & labeling', icon: '🦴', title: 'Appendicular Skeleton Quiz',
+    desc: 'Week 5 — limbs and girdles labeling (teacher/student modes).',
+    url: 'https://producer456.github.io/bio40a-appendicular-skeleton/' },
+  { group: 'Quizzes & labeling', icon: '💪', title: 'Week 8 Lab Quiz',
+    desc: 'Skeletal muscle tissue & axial muscles labeling.',
+    url: 'https://producer456.github.io/bio40a-week8-quiz/' },
+  { group: 'Quizzes & labeling', icon: '🩹', title: 'Integumentary System Quiz',
+    desc: 'Chapter 5 — 100 multiple-choice questions, Standard + Hard modes.',
+    url: 'https://producer456.github.io/bio40a-integumentary-quiz/' },
+  { group: 'Quizzes & labeling', icon: '📝', title: 'Lab Exam Simulator',
+    desc: '12-station practice run of the practical lab exam.',
+    url: 'https://producer456.github.io/bio40a-lab-exam/' },
+  { group: 'Quizzes & labeling', icon: '🔗', title: 'Week 4–5 Term Matching',
+    desc: 'Drag-to-pair terms with definitions and slide assignments.',
+    url: 'https://producer456.github.io/bio-week-4-5-term-matching/' },
+  { group: 'Quizzes & labeling', icon: '❓', title: 'Quizzes',
+    desc: 'General collection of class quizzes.',
+    url: 'https://producer456.github.io/quizzes/' },
+
+  { group: 'Behind the scenes', icon: '🛠️', title: 'How the Chapter 4 app was built',
+    desc: 'Narrative + the full build conversation behind the Ch.4 companion.',
+    url: 'https://producer456.github.io/bio40a-ch4-build-story/' },
+];
+
+const groupsEl = document.getElementById('groups');
+const order = ['Featured', 'Study companions', 'Quizzes & labeling', 'Behind the scenes'];
+
+function render(q = '') {
+  const needle = q.trim().toLowerCase();
+  groupsEl.innerHTML = '';
+  let shown = 0;
+  for (const group of order) {
+    const items = SITES.filter(s => s.group === group &&
+      (!needle || (s.title + ' ' + s.desc).toLowerCase().includes(needle)));
+    if (!items.length) continue;
+    shown += items.length;
+    const h = document.createElement('h2');
+    h.textContent = group;
+    groupsEl.appendChild(h);
+    const grid = document.createElement('div');
+    grid.className = 'grid';
+    for (const s of items) {
+      const a = document.createElement('a');
+      a.className = 'card' + (s.featured ? ' featured' : '');
+      a.href = s.url;
+      a.innerHTML = `<h3>${s.icon} ${escapeHtml(s.title)}</h3><p>${escapeHtml(s.desc)}</p><span class="go">Open →</span>`;
+      grid.appendChild(a);
+    }
+    groupsEl.appendChild(grid);
+  }
+  if (!shown) groupsEl.innerHTML = '<p class="empty">Nothing matches that.</p>';
+}
+function escapeHtml(s) {
+  return s.replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+}
+document.getElementById('filter').addEventListener('input', e => render(e.target.value));
+render();
+</script>
+</body>
+</html>
