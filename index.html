@@ -62,8 +62,15 @@
 <script>
 const SITES = [
   { group: 'Featured', featured: true, icon: '⚡', title: 'Quiz Studio',
-    desc: 'The hub: every quiz in one place, plus offline Mac & Windows apps. Multiple-choice and image pin-ID, with a retake-what-you-missed loop.',
+    desc: 'The hub: every quiz in one place, plus offline Mac & Windows apps. Multiple-choice and image pin-ID, with a retake-what-you-missed loop. Generate your own quizzes from PDFs in the desktop app.',
     url: 'https://producer456.github.io/quiz-studio/' },
+
+  { group: 'Downloads', icon: '🍎', title: 'Quiz Studio for Mac',
+    desc: 'Offline desktop app (.dmg). Generate quizzes from PDFs, take them anywhere. First launch: right-click → Open.',
+    url: 'https://github.com/producer456/quiz-studio/releases/latest' },
+  { group: 'Downloads', icon: '🪟', title: 'Quiz Studio for Windows',
+    desc: 'Offline desktop app (.exe installer). If SmartScreen warns: More info → Run anyway.',
+    url: 'https://github.com/producer456/quiz-studio/releases/latest' },
 
   { group: 'Study companions', icon: '📖', title: 'BIO 40A Study Companion',
     desc: 'Read-and-learn companion for the course.',
@@ -106,7 +113,7 @@ const SITES = [
 ];
 
 const groupsEl = document.getElementById('groups');
-const order = ['Featured', 'Study companions', 'Quizzes & labeling', 'Behind the scenes'];
+const order = ['Featured', 'Downloads', 'Study companions', 'Quizzes & labeling', 'Behind the scenes'];
 
 function render(q = '') {
   const needle = q.trim().toLowerCase();
@@ -126,7 +133,9 @@ function render(q = '') {
       const a = document.createElement('a');
       a.className = 'card' + (s.featured ? ' featured' : '');
       a.href = s.url;
-      a.innerHTML = `<h3>${s.icon} ${escapeHtml(s.title)}</h3><p>${escapeHtml(s.desc)}</p><span class="go">Open →</span>`;
+      const isDownload = s.group === 'Downloads';
+      if (isDownload) { a.target = '_blank'; a.rel = 'noopener'; }
+      a.innerHTML = `<h3>${s.icon} ${escapeHtml(s.title)}</h3><p>${escapeHtml(s.desc)}</p><span class="go">${isDownload ? 'Download ↗' : 'Open →'}</span>`;
       grid.appendChild(a);
     }
     groupsEl.appendChild(grid);
