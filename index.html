@@ -107,13 +107,17 @@ const SITES = [
     desc: 'General collection of class quizzes.',
     url: 'https://producer456.github.io/quizzes/' },
 
+  { group: 'Interactive explainers', icon: '💸', title: 'Does Money Buy Happiness?',
+    desc: 'A scrollable, interactive walk through the 2023 Killingsworth–Kahneman–Mellers study: when more income lifts mood, when it stops, and why two famous studies disagreed — with the full paper to read inside.',
+    url: 'https://producer456.github.io/income-happiness/' },
+
   { group: 'Behind the scenes', icon: '🛠️', title: 'How the Chapter 4 app was built',
     desc: 'Narrative + the full build conversation behind the Ch.4 companion.',
     url: 'https://producer456.github.io/bio40a-ch4-build-story/' },
 ];
 
 const groupsEl = document.getElementById('groups');
-const order = ['Featured', 'Downloads', 'Study companions', 'Quizzes & labeling', 'Behind the scenes'];
+const order = ['Featured', 'Downloads', 'Study companions', 'Quizzes & labeling', 'Interactive explainers', 'Behind the scenes'];
 
 function render(q = '') {
   const needle = q.trim().toLowerCase();
