@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mapblock</title>
+<meta name="description" content="A private navigation app built for one car and one driver — maps, directions and a record of every drive, with nothing sent to anybody.">
+<style>
+  :root {
+    --bg: #0f1419; --panel: #1a2129; --panel-2: #222b35;
+    --ink: #e8edf2; --ink-dim: #8a98a6; --ink-faint: #66727e;
+    --accent: #4da3ff; --amber: #f0a63c; --radius: 14px;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--ink); min-height: 100vh;
+    font: 16px/1.65 -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap { max-width: 940px; margin: 0 auto; padding: 0 20px; }
+
+  /* hero */
+  .hero {
+    background: radial-gradient(900px 500px at 50% -20%, #1b2c3d 0%, var(--bg) 65%);
+    padding: 72px 0 48px; border-bottom: 1px solid var(--panel-2);
+  }
+  .badge {
+    display: inline-block; font-size: 12px; letter-spacing: .1em; text-transform: uppercase;
+    color: var(--accent); border: 1px solid #2b5378; border-radius: 999px;
+    padding: 5px 12px; margin-bottom: 20px;
+  }
+  h1 { font-size: 46px; line-height: 1.1; margin: 0 0 14px; letter-spacing: -0.03em; }
+  .tagline { font-size: 20px; color: var(--ink-dim); margin: 0 0 8px; max-width: 620px; }
+  .hero .lede { max-width: 620px; color: var(--ink-dim); }
+
+  /* sections */
+  section { padding: 56px 0; border-bottom: 1px solid var(--panel-2); }
+  section:last-of-type { border-bottom: none; }
+  h2 { font-size: 26px; margin: 0 0 12px; letter-spacing: -0.02em; }
+  h3 { font-size: 18px; margin: 0 0 6px; }
+  p { margin: 0 0 14px; }
+  .dim { color: var(--ink-dim); }
+  .kicker {
+    font-size: 12px; text-transform: uppercase; letter-spacing: .09em;
+    color: var(--ink-faint); margin: 0 0 10px;
+  }
+
+  /* two-column feature rows */
+  .row { display: grid; grid-template-columns: 1fr 300px; gap: 44px; align-items: center; }
+  .row.flip { grid-template-columns: 300px 1fr; }
+  .row.flip .shot { order: -1; }
+  .shot img {
+    width: 100%; height: auto; display: block;
+    border-radius: 22px; border: 1px solid var(--panel-2);
+    box-shadow: 0 18px 50px rgba(0,0,0,.55);
+  }
+  .cap { font-size: 13px; color: var(--ink-faint); margin: 10px 0 0; text-align: center; }
+
+  /* small feature grid */
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 16px; margin-top: 8px; }
+  .card {
+    background: var(--panel); border: 1px solid var(--panel-2);
+    border-radius: var(--radius); padding: 18px;
+  }
+  .card h3 { font-size: 16px; }
+  .card p { font-size: 14px; color: var(--ink-dim); margin: 0; }
+
+  .callout {
+    background: linear-gradient(180deg, #1c2a38, var(--panel));
+    border: 1px solid #2b5378; border-radius: var(--radius);
+    padding: 24px 26px; margin-top: 20px;
+  }
+  .callout p:last-child { margin-bottom: 0; }
+  .star { color: var(--amber); }
+
+  footer { padding: 40px 0 64px; color: var(--ink-faint); font-size: 13px; }
+  footer a { color: var(--ink-dim); }
+
+  @media (max-width: 760px) {
+    h1 { font-size: 34px; }
+    .tagline { font-size: 18px; }
+    .row, .row.flip { grid-template-columns: 1fr; gap: 26px; }
+    .row.flip .shot { order: 0; }
+    .shot { max-width: 300px; margin: 0 auto; }
+    .hero { padding: 52px 0 36px; }
+    section { padding: 44px 0; }
+  }
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <div class="wrap">
+    <span class="badge">iPhone · not on the App Store</span>
+    <h1>Mapblock</h1>
+    <p class="tagline">A navigation app built for one car and one driver.</p>
+    <p class="lede">It gives directions, it knows what the engine is doing, and it keeps a record of
+      everywhere I've driven. The part that makes it different is what it <em>doesn't</em> do:
+      nothing about where I go leaves my own equipment.</p>
+  </div>
+</div>
+
+<div class="wrap">
+
+  <section>
+    <div class="row">
+      <div>
+        <p class="kicker">The idea</p>
+        <h2>Every map app is also a tracking app</h2>
+        <p>When you type an address into a normal maps app, that address goes to a company. So does
+          your position, continuously, the whole way there. That's the deal — you get very good
+          directions and they get a detailed record of your life.</p>
+        <p>Mapblock is my attempt at the first half without the second. The maps, the search box and
+          the turn-by-turn directions all run on a computer at my house. The phone talks to that and
+          to nothing else. No account, no company, nobody's servers but mine.</p>
+        <p class="dim">It covers the Bay Area, because that's where I drive.</p>
+      </div>
+      <figure class="shot" style="margin:0">
+        <img src="shots/map.webp" alt="Mapblock's map view at night, showing the car on a San Francisco street with its headlights lit." loading="lazy">
+      </figure>
+    </div>
+  </section>
+
+  <section>
+    <div class="row flip">
+      <figure class="shot" style="margin:0">
+        <img src="shots/nav.webp" alt="Turn-by-turn navigation, with the next turn shown at the top and the route drawn ahead of the car." loading="lazy">
+      </figure>
+      <div>
+        <p class="kicker">Getting there</p>
+        <h2>It drives like a normal sat-nav</h2>
+        <p>Search for somewhere, pick it, go. It talks you through the turns, re-routes if you miss
+          one, and keeps the screen awake so it can sit on the dash.</p>
+        <p>The car on the map is my actual car — a white Mustang convertible, drawn from above, with
+          its headlights on after dark. That sounds like a small thing. It is the reason I enjoy
+          using it.</p>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <p class="kicker">The car</p>
+    <h2>It's plugged into the engine</h2>
+    <p>There's a small adapter in the car's diagnostic port — the same socket a mechanic uses. It
+      lets the app read what the engine is actually doing while I drive, so the map can show things
+      no phone could work out on its own.</p>
+    <div class="grid">
+      <div class="card">
+        <h3>Boost</h3>
+        <p>The whole screen warms up when the turbo comes on. Colour and strength are mine to set.</p>
+      </div>
+      <div class="card">
+        <h3>The road behind you</h3>
+        <p>The route you just drove gets coloured in — by how hard you cornered, how economical you
+          were, or how much boost you were using.</p>
+      </div>
+      <div class="card">
+        <h3>Temperatures and faults</h3>
+        <p>Coolant, intake, fuel trim. If the check-engine light comes on it can tell me why.</p>
+      </div>
+      <div class="card">
+        <h3>A grade for the drive</h3>
+        <p>Every trip gets scored on smoothness and economy, and a running note of anything the
+          engine looks unhappy about.</p>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="row">
+      <div>
+        <p class="kicker">Fuel</p>
+        <h2>How far can I actually get?</h2>
+        <p>Not "240 miles" as a number, but the actual shape of it on the map — every road I could
+          reach on what's in the tank, worked out from the fuel level and the mileage I've really
+          been getting rather than the sticker figure.</p>
+        <p>The inner ring is the part after the low-fuel light comes on. It's the answer to
+          "can I make it home, or am I stopping?"</p>
+      </div>
+      <figure class="shot" style="margin:0">
+        <img src="shots/range.webp" alt="A range ring drawn over the Bay Area, showing every road reachable on the fuel remaining." loading="lazy">
+      </figure>
+    </div>
+  </section>
+
+  <section>
+    <div class="row flip">
+      <figure class="shot" style="margin:0">
+        <img src="shots/passenger.webp" alt="Passenger mode, showing a cornering meter with a fading trail and a boost gauge." loading="lazy">
+      </figure>
+      <div>
+        <p class="kicker">Passenger mode</p>
+        <h2>Something to hand over</h2>
+        <p>Hand the phone to whoever's in the other seat and it stops being a map. Cornering forces
+          draw themselves as a little trail, the boost gauge holds its peak, and it makes the
+          occasional dry remark about the driving.</p>
+        <p class="dim">It is completely unnecessary and it's one of my favourite parts.</p>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <p class="kicker">Looking back</p>
+    <h2>A record of where I've been</h2>
+    <p>Every drive is kept — the route, how long it took, where it started and ended, what was
+      playing. Over time that turns into something more interesting than a list of trips: the places
+      I actually go, the times I actually go there, how a familiar drive changes with traffic.</p>
+    <p>All of it lives on my own machine. It exists because I wanted it, and it stops existing the
+      moment I decide it should.</p>
+  </section>
+
+  <section>
+    <div class="row">
+      <div>
+        <p class="kicker">One extra mode</p>
+        <h2><span class="star">✳</span> Ambulance mode</h2>
+        <p>I'm an EMT, so there's a mode built for that. Switched on, it puts hospitals on the map —
+          from the state's licensing register rather than general map data, so it knows which ones
+          are real receiving facilities and what level of trauma centre each one is. It'll also run
+          a call clock with one-tap stage marks, and it stops grading my driving, because the score
+          is calibrated for a commute.</p>
+        <p>It records times and places only. Never anything about a patient, and it offers no
+          medical guidance of any kind — that isn't an app's job.</p>
+        <p class="dim">Realistically nobody but me will ever turn this on, and mostly I turn it on
+          for fun.</p>
+      </div>
+      <figure class="shot" style="margin:0">
+        <img src="shots/duty.webp" alt="Ambulance mode, listing the nearest receiving hospitals with distances and trauma levels." loading="lazy">
+      </figure>
+    </div>
+  </section>
+
+  <section>
+    <h2>Where the data goes</h2>
+    <div class="callout">
+      <p><strong>Nowhere.</strong> The maps, the search and the directions are all served by a
+        computer at my house, reached over my own private network. No third party is involved in any
+        part of it — not for the map tiles, not for looking up an address, not for working out a
+        route.</p>
+      <p>Traffic is the one thing that comes from outside, and it's fetched the careful way round:
+        the whole public incident feed is downloaded on a timer and searched on my side, so the
+        request never says where I am or where I'm going.</p>
+      <p class="dim" style="margin-bottom:0">There's no account to make and no company behind it,
+        because there is no company. It's one app, for one car.</p>
+    </div>
+  </section>
+
+  <section>
+    <h2>Can I get it?</h2>
+    <p>Not really, and that's not me being coy. It only works if you have the server half running at
+      home, the map data for your area, and an adapter in your car — and half of what makes it good
+      is that it's built around one specific Mustang.</p>
+    <p>It's here because people kept asking what I'd been building. Now there's a link.</p>
+  </section>
+
+</div>
+
+<footer>
+  <div class="wrap">
+    Mapblock — a personal project. Map data © OpenStreetMap contributors.
+    <a href="https://producer456.github.io/">More of my projects</a>
+  </div>
+</footer>
+
+</body>
+</html>
